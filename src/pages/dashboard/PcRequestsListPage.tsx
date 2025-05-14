@@ -72,25 +72,25 @@ const PcRequestsListPage: React.FC = () => {
   // Adapter les cards
   const summaryFiltered = {
     total: displayedRequests.length,
-    pending: displayedRequests.filter(r => r.status === 'En attente').length,
-    validated: displayedRequests.filter(r => r.status === 'Validée').length,
-    refused: displayedRequests.filter(r => r.status === 'Refusée').length,
+    pending: displayedRequests.filter(r => r.status === 'Pending').length,
+    approved: displayedRequests.filter(r => r.status === 'Approved').length,
+    rejected: displayedRequests.filter(r => r.status === 'Rejected').length,
   };
 
   // Générer les données pour la courbe par status et date (corrigé)
-  const statusList = ['En attente', 'Validée', 'Refusée'];
+  const statusList = ['Pending', 'Approved', 'Rejected'];
   const grouped: Record<string, Record<string, number>> = {};
   requests.forEach(req => {
     const date = req.createdAt.slice(0, 10);
-    if (!grouped[date]) grouped[date] = { 'En attente': 0, 'Validée': 0, 'Refusée': 0 };
+    if (!grouped[date]) grouped[date] = { 'Pending': 0, 'Approved': 0, 'Rejected': 0 };
     if (statusList.includes(req.status)) grouped[date][req.status]++;
   });
   const allDates = Object.keys(grouped).sort();
   const chartDataAll = allDates.map(date => ({
     date,
-    'En attente': grouped[date]['En attente'],
-    'Validée': grouped[date]['Validée'],
-    'Refusée': grouped[date]['Refusée'],
+    'Pending': grouped[date]['Pending'],
+    'Approved': grouped[date]['Approved'],
+    'Rejected': grouped[date]['Rejected'],
   }));
 
   // Adapter la courbe filtrée
@@ -98,7 +98,7 @@ const PcRequestsListPage: React.FC = () => {
     if (statusFilter === 'All') return d;
     return {
       date: d.date,
-      [statusFilter]: d[statusFilter as 'En attente' | 'Validée' | 'Refusée'],
+      [statusFilter]: d[statusFilter as 'Pending' | 'Approved' | 'Rejected'],
     };
   });
 
@@ -123,7 +123,7 @@ const PcRequestsListPage: React.FC = () => {
       await requestService.updateStatus(id, status);
       console.log("Après appel requestService.updateStatus");
       setRequests(reqs => reqs.map(r => r.id === id ? { ...r, status } : r));
-      toast.success(`Demande ${status === 'Validée' ? 'validée' : 'refusée'} !`);
+      toast.success(`Demande ${status === 'Approved' ? 'validée' : 'refusée'} !`);
     } catch (e: any) {
       console.error("Erreur dans handleStatus:", e);
       toast.error('Erreur lors de la mise à jour du statut');
@@ -172,16 +172,16 @@ const PcRequestsListPage: React.FC = () => {
       </div>
       {/* FILTRE PAR STATUS */}
       <div className="mb-6 flex flex-wrap gap-4 items-center">
-        <label className="font-medium">Filtrer par status :</label>
+        <label className="font-medium">Filter by status:</label>
         <select
           className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935]"
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
         >
           <option value="All">All</option>
-          <option value="En attente">En attente</option>
-          <option value="Validée">Validée</option>
-          <option value="Refusée">Refusée</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
         </select>
       </div>
       {/* BARRE DE RECHERCHE */}
@@ -201,16 +201,16 @@ const PcRequestsListPage: React.FC = () => {
           <div className="text-3xl font-bold">{summaryFiltered.total}</div>
         </div>
         <div className="bg-orange-100 text-orange-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">En attente</div>
+          <div className="text-lg font-semibold mb-2">Pending</div>
           <div className="text-3xl font-bold">{summaryFiltered.pending}</div>
         </div>
         <div className="bg-green-100 text-green-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Validées</div>
-          <div className="text-3xl font-bold">{summaryFiltered.validated}</div>
+          <div className="text-lg font-semibold mb-2">Approved</div>
+          <div className="text-3xl font-bold">{summaryFiltered.approved}</div>
         </div>
         <div className="bg-red-100 text-red-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Refusées</div>
-          <div className="text-3xl font-bold">{summaryFiltered.refused}</div>
+          <div className="text-lg font-semibold mb-2">Rejected</div>
+          <div className="text-3xl font-bold">{summaryFiltered.rejected}</div>
         </div>
       </div>
       {/* COURBE PAR STATUS */}
@@ -221,14 +221,14 @@ const PcRequestsListPage: React.FC = () => {
             <XAxis dataKey="date" />
             <YAxis allowDecimals={false} />
             <Tooltip />
-            {(statusFilter === 'All' || statusFilter === 'En attente') && (
-              <Line type="monotone" dataKey="En attente" stroke="#FFA500" strokeWidth={3} dot={{ r: 5 }} name="En attente" />
+            {(statusFilter === 'All' || statusFilter === 'Pending') && (
+              <Line type="monotone" dataKey="Pending" stroke="#FFA500" strokeWidth={3} dot={{ r: 5 }} name="Pending" />
             )}
-            {(statusFilter === 'All' || statusFilter === 'Validée') && (
-              <Line type="monotone" dataKey="Validée" stroke="#43a047" strokeWidth={3} dot={{ r: 5 }} name="Validée" />
+            {(statusFilter === 'All' || statusFilter === 'Approved') && (
+              <Line type="monotone" dataKey="Approved" stroke="#43a047" strokeWidth={3} dot={{ r: 5 }} name="Approved" />
             )}
-            {(statusFilter === 'All' || statusFilter === 'Refusée') && (
-              <Line type="monotone" dataKey="Refusée" stroke="#e53935" strokeWidth={3} dot={{ r: 5 }} name="Refusée" />
+            {(statusFilter === 'All' || statusFilter === 'Rejected') && (
+              <Line type="monotone" dataKey="Rejected" stroke="#e53935" strokeWidth={3} dot={{ r: 5 }} name="Rejected" />
             )}
           </LineChart>
         </ResponsiveContainer>
@@ -247,13 +247,13 @@ const PcRequestsListPage: React.FC = () => {
                 <th className="px-4 py-2 border">Motif</th>
                 <th className="px-4 py-2 border">Demandé par</th>
                 <th className="px-4 py-2 border">Signatures</th>
-                <th className="px-4 py-2 border">Statut</th>
+                <th className="px-4 py-2 border">Status</th>
                 <th className="px-4 py-2 border">Date</th>
                 <th className="px-4 py-2 border">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {searchedRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((req) => (
+              {searchedRequests.map((req) => (
                 <tr key={req.id}>
                   <td className="px-4 py-2 border">{req.fullName}</td>
                   <td className="px-4 py-2 border">{req.department}</td>
@@ -268,28 +268,28 @@ const PcRequestsListPage: React.FC = () => {
                       ))}
                     </ul>
                   </td>
-                  <td className={`px-4 py-2 border font-bold ${req.status === 'Validée' ? 'text-green-600' : req.status === 'Refusée' ? 'text-red-600' : 'text-yellow-600'}`}>{req.status}</td>
+                  <td className={`px-4 py-2 border font-bold ${req.status === 'Approved' ? 'text-green-600' : req.status === 'Rejected' ? 'text-red-600' : 'text-yellow-600'}`}>{req.status}</td>
                   <td className="px-4 py-2 border">{new Date(req.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 border flex flex-col gap-2 items-center">
-                    {user?.roles && user.roles[0] === "MANAGER" && req.status === 'En attente' && (
+                    {user?.roles?.includes("MANAGER") && req.status === 'Pending' && (
                       <div className="flex gap-2">
                         <button
                           className="bg-green-500 hover:bg-green-600 text-white rounded-full p-2 shadow flex items-center"
-                          title="Valider"
-                          onClick={() => handleStatus(req.id, 'Validée')}
+                          title="Approve"
+                          onClick={() => handleStatus(req.id, 'Approved')}
                         >
                           <FaCheck />
                         </button>
                         <button
                           className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow flex items-center"
-                          title="Refuser"
-                          onClick={() => handleStatus(req.id, 'Refusée')}
+                          title="Reject"
+                          onClick={() => handleStatus(req.id, 'Rejected')}
                         >
                           <FaTimes />
                         </button>
                       </div>
                     )}
-                    {user?.roles && user.roles[0] !== "MANAGER" && req.status === 'En attente' && (
+                    {user?.roles && user.roles[0] !== "MANAGER" && req.status === 'Pending' && (
                       <div className="text-xs text-gray-500">Seul un manager peut valider ou refuser.</div>
                     )}
                     <button
@@ -304,12 +304,6 @@ const PcRequestsListPage: React.FC = () => {
               ))}
             </tbody>
           </table>
-          {/* Pagination */}
-          <div className="flex justify-center items-center gap-2 mt-4">
-            <button className="btn" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
-            <span>Page {page} / {totalPages || 1}</span>
-            <button className="btn" disabled={page === totalPages || totalPages === 0} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Suivant</button>
-          </div>
         </div>
       )}
     </div>
