@@ -22,6 +22,11 @@ import UnauthorizedPage from '../pages/public/UnauthorizedPage';
 import UpdateCredentialsPage from '../pages/dashboard/UpdateCredentialsPage';
 import InvestmentFormsPage from '../pages/dashboard/InvestmentFormsPage';
 import AssetsManagementPage from '../pages/dashboard/AssetsManagementPage';
+import AssetScrubPage from '../pages/dashboard/AssetScrubPage';
+import AddRequestPage from '../pages/dashboard/AddRequestPage';
+import PcRequestsListPage from '../pages/dashboard/PcRequestsListPage';
+import ProfilePage from '../pages/dashboard/ProfilePage';
+import AssetLifecyclePage from '../pages/dashboard/AssetLifecyclePage';
 
 
 const GlobalRouter = () => {
@@ -45,6 +50,11 @@ const GlobalRouter = () => {
           <Route path={PATH_DASHBOARD.updateCredentials} element={<UpdateCredentialsPage/>}/>
           <Route path={PATH_DASHBOARD.investmentForms} element={<InvestmentFormsPage />} />
           <Route path={PATH_DASHBOARD.assetsManagement} element={<AssetsManagementPage />} />
+          <Route path={PATH_DASHBOARD.addRequest} element={<AddRequestPage />} />
+          <Route path="/asset-scrub" element={<AssetScrubPage />} />
+          <Route path={PATH_DASHBOARD.pcRequests} element={<PcRequestsListPage />} />
+          <Route path={PATH_DASHBOARD.profile} element={<ProfilePage />} />
+          <Route path={PATH_DASHBOARD.assetLifecycle} element={<AssetLifecyclePage />} />
         </Route>
         <Route element={<AuthGuard roles={managerAccessRoles} />}>
           <Route path={PATH_DASHBOARD.manager} element={<ManagerPage />} />

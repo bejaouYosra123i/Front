@@ -1,116 +1,197 @@
 import { useState } from 'react';
-import { CiUser, CiMenuBurger, CiMenuKebab } from 'react-icons/ci';
-import useAuth from '../../hooks/useAuth.hook';
-import Button from '../general/Button';
-import { useNavigate } from 'react-router-dom';
 import { PATH_DASHBOARD } from '../../routes/paths';
+import useAuth from '../../hooks/useAuth.hook';
+import { 
+  FiUsers, 
+  FiMessageSquare, 
+  FiInbox, 
+  FiMail, 
+  FiActivity, 
+  FiFileText, 
+  FiSettings,
+  FiChevronLeft,
+  FiChevronRight,
+  FiUser,
+  FiLayers,
+  FiShield,
+  FiUserCheck,
+  FiHome,
+  FiPlusCircle,
+  FiList,
+  FiRefreshCw
+} from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { NavLink } from 'react-router-dom';
+
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  to: string;
+  isAdminOnly?: boolean;
+  isCollapsed: boolean;
+}
+
+const NavItem = ({ icon, label, to, isAdminOnly = false, isCollapsed }: NavItemProps) => {
+  const { user } = useAuth();
+  
+  if (isAdminOnly && !user?.roles?.includes('ADMIN')) return null;
+
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center p-3 rounded-lg transition-all duration-200 group ${
+          isActive 
+            ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg'
+            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+        }`
+      }
+      onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
+    >
+      <span className="text-xl">{icon}</span>
+      {!isCollapsed && (
+        <motion.span
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="ml-3 font-medium"
+        >
+          {label}
+        </motion.span>
+      )}
+    </NavLink>
+  );
+};
 
 const Sidebar = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleClick = (url: string) => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    navigate(url);
-  };
-
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const navigation = [
+    {
+      group: 'main',
+      items: [
+        { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly: false },
+        { icon: <FiLayers />, label: 'Assets Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
+        { icon: <FiRefreshCw />, label: 'Cycle de Vie', to: PATH_DASHBOARD.assetLifecycle, adminOnly: true },
+        { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
+        { icon: <FiPlusCircle />, label: 'Ajouter une demande', to: PATH_DASHBOARD.addRequest, adminOnly: false },
+        { icon: <FiList />, label: 'Liste demandes PC', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
+        { icon: <FiUser />, label: 'Profile', to: PATH_DASHBOARD.profile, adminOnly: false },
+      ]
+    },
+    {
+      group: 'communication',
+      label: 'Communication',
+      icon: <FiMessageSquare />,
+      items: [
+        { icon: <FiMail />, label: 'Send Message', to: PATH_DASHBOARD.sendMessage, adminOnly: false },
+        { icon: <FiInbox />, label: 'Inbox', to: PATH_DASHBOARD.inbox, adminOnly: false },
+        { icon: <FiMail />, label: 'All Messages', to: PATH_DASHBOARD.allMessages, adminOnly: true },
+      ]
+    },
+    {
+      group: 'administration',
+      label: 'Administration',
+      icon: <FiSettings />,
+      items: [
+        { icon: <FiUsers />, label: 'Users Management', to: PATH_DASHBOARD.usersManagement, adminOnly: true },
+        { icon: <FiActivity />, label: 'System Logs', to: PATH_DASHBOARD.systemLogs, adminOnly: true },
+        { icon: <FiActivity />, label: 'My Logs', to: PATH_DASHBOARD.myLogs, adminOnly: false },
+      ]
+    },
+    {
+      group: 'roles',
+      label: 'Role Pages',
+      icon: <FiShield />,
+      items: [
+        { icon: <FiShield />, label: 'Admin Page', to: PATH_DASHBOARD.admin, adminOnly: true },
+        { icon: <FiUserCheck />, label: 'Manager Page', to: PATH_DASHBOARD.manager, adminOnly: false },
+        { icon: <FiUser />, label: 'User Page', to: PATH_DASHBOARD.user, adminOnly: false },
+      ]
+    }
+  ];
+
   return (
-    <div
-      className={`shrink-0 bg-black text-white ${
-        isCollapsed ? 'w-16' : 'w-60'
-      } p-2 min-h-[calc(100vh-48px)] flex flex-col items-stretch gap-8 transition-all duration-300`}
+    <motion.div
+      initial={false}
+      animate={{
+        width: isCollapsed ? '4rem' : '16rem'
+      }}
+      className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden transition-all duration-300 shadow-xl"
     >
-      <div className="flex justify-between items-center">
-        <div className="self-center flex flex-col items-center">
-          <CiUser className="w-10 h-10 text-white" />
-          <h4 className="text-white">
-            {user?.firstName} {user?.lastName}
-          </h4>
-        </div>
+      {/* Header */}
+      <div className="p-4 flex items-center justify-between border-b border-gray-800">
+        {!isCollapsed && (
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center space-x-2"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center">
+              <FiUser className="text-white" />
+            </div>
+            <div className="text-sm font-medium">
+              <div>{user?.firstName} {user?.lastName}</div>
+              <div className="text-xs text-gray-400">{user?.email}</div>
+            </div>
+          </motion.div>
+        )}
+        {isCollapsed && (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center mx-auto">
+            <FiUser className="text-white" />
+          </div>
+        )}
         <button
           onClick={toggleSidebar}
-          className="flex justify-center items-center outline-none duration-300 h-6 w-6 text-xs font-semibold rounded-full border-2 text-[#ED1C24] border-[#ED1C24] bg-transparent hover:shadow-[0_0_5px_5px_#ED1C244C]"
+          className="p-1.5 rounded-full hover:bg-gray-800 transition-colors duration-200 text-gray-400 hover:text-white"
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {isCollapsed ? <CiMenuKebab className="w-4 h-4" /> : <CiMenuBurger className="w-4 h-4" />}
+          {isCollapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
         </button>
       </div>
 
-      <Button
-        label="Users Management"
-        onClick={() => handleClick(PATH_DASHBOARD.usersManagement)}
-        type="button"
-        variant="primary"
-        isAdmin={user?.roles?.includes('ADMIN')}
-      />
-      <Button
-        label="Send Message"
-        onClick={() => handleClick(PATH_DASHBOARD.sendMessage)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="Inbox"
-        onClick={() => handleClick(PATH_DASHBOARD.inbox)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="All Messages"
-        onClick={() => handleClick(PATH_DASHBOARD.allMessages)}
-        type="button"
-        variant="primary"
-        isAdmin={user?.roles?.includes('ADMIN')}
-      />
-      <Button
-        label="All Logs"
-        onClick={() => handleClick(PATH_DASHBOARD.systemLogs)}
-        type="button"
-        variant="primary"
-        isAdmin={user?.roles?.includes('ADMIN')}
-      />
-      <Button
-        label="My Logs"
-        onClick={() => handleClick(PATH_DASHBOARD.myLogs)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="Investment Forms"
-        onClick={() => handleClick(PATH_DASHBOARD.investmentForms)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="Assets Management"
-        onClick={() => handleClick(PATH_DASHBOARD.assetsManagement)}
-        type="button"
-        variant="primary"
-      />
-      <hr className="border-[#ED1C24]" />
-      <Button
-        label="Admin Page"
-        onClick={() => handleClick(PATH_DASHBOARD.admin)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="Manager Page"
-        onClick={() => handleClick(PATH_DASHBOARD.manager)}
-        type="button"
-        variant="primary"
-      />
-      <Button
-        label="User Page"
-        onClick={() => handleClick(PATH_DASHBOARD.user)}
-        type="button"
-        variant="primary"
-      />
-    </div>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        {navigation.map((section) => (
+          <div key={section.group} className="mb-6">
+            {!isCollapsed && section.label && (
+              <div className="px-2 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                {section.label}
+              </div>
+            )}
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <NavItem
+                  key={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.to}
+                  isAdminOnly={item.adminOnly}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        <li>
+          <a href="/asset-scrub" className="sidebar-link">Asset Scrub</a>
+        </li>
+      </nav>
+
+      {/* Footer */}
+      {!isCollapsed && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 border-t border-gray-800 text-center text-xs text-gray-500"
+        >
+          © {new Date().getFullYear()} Asset Management
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 

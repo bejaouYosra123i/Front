@@ -27,6 +27,11 @@ interface InvestmentFormData {
   total: number;
   status: string;
   items: InvestmentItem[];
+  numRitm?: string;
+  numCoupa?: string;
+  numIyras?: string;
+  et?: string;
+  ioNumber?: string;
 }
 
 const defaultItem: InvestmentItem = {
@@ -135,6 +140,9 @@ function exportFormToExcel(form: InvestmentFormData) {
 
 const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, editData, onCancel }) => {
   const { user } = useAuth();
+  if (!user?.roles?.includes('ADMIN')) {
+    return <div className="text-red-600 font-bold text-center p-8">Accès refusé : réservé aux administrateurs.</div>;
+  }
   const isEdit = !!editData;
   const [form, setForm] = useState<InvestmentFormData>(
     editData ? { ...editData } : {
@@ -270,19 +278,49 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label className="block text-xs font-medium mb-1 text-gray-600">Region</label>
-          <input name="region" value={form.region} onChange={handleChange} placeholder="Region" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          <select name="region" value={form.region} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <option value="">Sélectionner une région</option>
+            <option value="Europe">Europe</option>
+            <option value="North America">North America</option>
+            <option value="Asia">Asia</option>
+            <option value="Africa">Africa</option>
+            <option value="South America">South America</option>
+            <option value="Middle East">Middle East</option>
+          </select>
         </div>
         <div>
           <label className="block text-xs font-medium mb-1 text-gray-600">Currency</label>
-          <input name="currency" value={form.currency} onChange={handleChange} placeholder="Currency" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          <select name="currency" value={form.currency} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <option value="">Sélectionner une devise</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+            <option value="CNY">CNY</option>
+            <option value="MAD">MAD</option>
+          </select>
         </div>
         <div>
           <label className="block text-xs font-medium mb-1 text-gray-600">Location</label>
-          <input name="location" value={form.location} onChange={handleChange} placeholder="Enter location" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          <select name="location" value={form.location} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <option value="">Sélectionner un lieu</option>
+            <option value="Paris">Paris</option>
+            <option value="Lyon">Lyon</option>
+            <option value="Berlin">Berlin</option>
+            <option value="New York">New York</option>
+            <option value="Casablanca">Casablanca</option>
+            <option value="Tokyo">Tokyo</option>
+            <option value="Shanghai">Shanghai</option>
+            <option value="Autre">Autre</option>
+          </select>
         </div>
         <div>
           <label className="block text-xs font-medium mb-1 text-gray-600">Type of Investment</label>
-          <input name="typeOfInvestment" value={form.typeOfInvestment} onChange={handleChange} placeholder="Type of Investment" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          <select name="typeOfInvestment" value={form.typeOfInvestment} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <option value="">Sélectionner le type</option>
+            <option value="New">New</option>
+            <option value="Refresh">Refresh</option>
+          </select>
         </div>
         <div>
           <label className="block text-xs font-medium mb-1 text-gray-600">Req. Date</label>
@@ -300,6 +338,8 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
           <label className="block text-xs font-medium mb-1 text-gray-600">Total</label>
           <input name="total" value={form.total.toFixed(2)} readOnly className="w-full border ${borderGray} rounded-lg px-3 py-2 bg-gray-100 text-gray-700" placeholder="Total" />
         </div>
+        
+        
       </div>
       <div className="mb-4">
         <label className="block text-xs font-medium mb-1 text-gray-600">Justification</label>

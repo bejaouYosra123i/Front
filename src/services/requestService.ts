@@ -1,46 +1,43 @@
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export interface RequestData {
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
+  fullName: string;
   department: string;
+  function: string;
+  pcType: string;
+  reason: string;
+  requestedBy: string;
+  signatures: Record<string, string>;
 }
 
 export const requestService = {
   async submitRequest(data: RequestData) {
-    const response = await axios.post(`${API_URL}/requests`, data);
+    const response = await axios.post(`${API_URL}/api/PcRequest/requests`, data);
     return response.data;
   },
-
-  async downloadExcel() {
+  async getAllRequests() {
+    const response = await axios.get(`${API_URL}/api/PcRequest/requests`);
+    return response.data;
+  },
+  async updateStatus(id: number, status: string) {
+    const token = localStorage.getItem('accessToken');
     try {
-      const response = await axios.get(`${API_URL}/requests/export`, {
-        responseType: 'blob'
-      });
-
-      // Create a blob from the response data
-      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
-      // Create a download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `requests_${new Date().toISOString().split('T')[0]}.xlsx`;
-      
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-      
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const response = await axios.patch(
+        `${API_URL}/api/PcRequest/requests/${id}/status`,
+        { status },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        }
+      );
+      return response.data;
     } catch (error) {
-      console.error('Error downloading Excel file:', error);
+      console.error("Erreur Axios dans updateStatus:", error);
       throw error;
     }
-  }
+  },
 }; 

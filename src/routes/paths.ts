@@ -22,4 +22,8 @@ export const PATH_PUBLIC = {
     user: '/dashboard/user',
     investmentForms: '/dashboard/investment-forms',
     assetsManagement: '/dashboard/assets-management',
+    addRequest: '/dashboard/add-request',
+    pcRequests: '/dashboard/pc-requests',
+    profile: '/dashboard/profile',
+    assetLifecycle: '/dashboard/asset-lifecycle',
   };

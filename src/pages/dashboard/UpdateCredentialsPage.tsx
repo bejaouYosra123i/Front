@@ -52,13 +52,8 @@ const onSubmitUpdateCredentials: SubmitHandler<IUpdateCredentialsDto> = async (d
         console.error('Error in onSubmitUpdateCredentials:', error);
         setLoading(false);
         const err = error as any;
-        console.log('Error object:', err);
-        
-        // Handle different error formats
         let errorMessage = 'An Error occurred. Please contact admins';
-        
         if (err.response?.data) {
-            // Handle API error response
             const errorData = err.response.data;
             if (typeof errorData === 'string') {
                 errorMessage = errorData;
@@ -66,11 +61,12 @@ const onSubmitUpdateCredentials: SubmitHandler<IUpdateCredentialsDto> = async (d
                 errorMessage = errorData.message;
             } else if (errorData.title) {
                 errorMessage = errorData.title;
+            } else {
+                errorMessage = JSON.stringify(errorData);
             }
         } else if (err.message) {
             errorMessage = err.message;
         }
-        
         toast.error(errorMessage);
     }
 };
