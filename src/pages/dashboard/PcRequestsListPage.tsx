@@ -49,8 +49,15 @@ const PcRequestsListPage: React.FC = () => {
     fetchRequests();
   }, []);
 
+  // Filter requests for USER role
+  const isUser = user?.roles?.includes('USER');
+  const userName = user?.userName || user?.firstName || user?.email;
+  const visibleRequests = isUser
+    ? requests.filter(req => req.requestedBy?.toLowerCase() === userName?.toLowerCase())
+    : requests;
+
   // Filtres dynamiques
-  const filtered = requests.filter(req =>
+  const filtered = visibleRequests.filter(req =>
     (!departmentFilter || req.department === departmentFilter) &&
     (!pcTypeFilter || req.pcType === pcTypeFilter) &&
     (!statusFilter || req.status === statusFilter) &&
@@ -67,7 +74,7 @@ const PcRequestsListPage: React.FC = () => {
   const statuses = Array.from(new Set(requests.map(r => r.status))).filter(Boolean);
 
   // Filtrage des données selon le status sélectionné
-  const displayedRequests = statusFilter === 'All' ? requests : requests.filter(r => r.status === statusFilter);
+  const displayedRequests = statusFilter === 'All' ? visibleRequests : visibleRequests.filter(r => r.status === statusFilter);
 
   // Adapter les cards
   const summaryFiltered = {

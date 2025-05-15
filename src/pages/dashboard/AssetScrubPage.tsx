@@ -88,12 +88,18 @@ const AssetScrubPage = () => {
   const handleDelete = async () => {
     if (selected.length === 0) return;
     try {
-      await axios.post('/api/AssetScrub/delete-batch', { ids: selected });
+      await axios.post('/api/AssetScrub/delete-batch', { req: selected }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       toast.success('Suppression réussie !');
       setSelected([]);
       fetchData();
-    } catch (err) {
-      toast.error('Erreur lors de la suppression');
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        toast.error('Erreur: ' + JSON.stringify(err.response.data));
+      } else {
+        toast.error('Erreur lors de la suppression');
+      }
     }
   };
 

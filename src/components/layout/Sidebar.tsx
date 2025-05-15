@@ -75,7 +75,6 @@ const Sidebar = () => {
       items: [
         { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly: false },
         { icon: <FiLayers />, label: 'Assets Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
-        { icon: <FiRefreshCw />, label: 'Cycle de Vie', to: PATH_DASHBOARD.assetLifecycle, adminOnly: true },
         { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
         { icon: <FiPlusCircle />, label: 'Ajouter une demande', to: PATH_DASHBOARD.addRequest, adminOnly: false },
         { icon: <FiList />, label: 'Liste demandes PC', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
@@ -107,9 +106,9 @@ const Sidebar = () => {
       label: 'Role Pages',
       icon: <FiShield />,
       items: [
-        { icon: <FiShield />, label: 'Admin Page', to: PATH_DASHBOARD.admin, adminOnly: true },
-        { icon: <FiUserCheck />, label: 'Manager Page', to: PATH_DASHBOARD.manager, adminOnly: false },
-        { icon: <FiUser />, label: 'User Page', to: PATH_DASHBOARD.user, adminOnly: false },
+        // Removed: { icon: <FiShield />, label: 'Admin Page', to: PATH_DASHBOARD.admin, adminOnly: true },
+        // Removed: { icon: <FiUserCheck />, label: 'Manager Page', to: PATH_DASHBOARD.manager, adminOnly: false },
+        // Removed: { icon: <FiUser />, label: 'User Page', to: PATH_DASHBOARD.user, adminOnly: false },
       ]
     }
   ];
@@ -177,7 +176,7 @@ const Sidebar = () => {
           </div>
         ))}
         <li>
-          <a href="/asset-scrub" className="sidebar-link">Asset Scrub</a>
+          <a href="/dashboard/AssetScrubPage" className="sidebar-link">Asset Scrub</a>
         </li>
       </nav>
 
