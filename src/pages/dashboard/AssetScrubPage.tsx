@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface AssetScrub {
   id: number;
@@ -103,6 +105,95 @@ const AssetScrubPage = () => {
     }
   };
 
+  // Fonction d'export PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+    // Titre centré
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Asset Scrap Request Report', doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+    // Date en dessous
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+    // Tableau principal
+    autoTable(doc, {
+      head: [[
+        'Company Code', 'Plant Code', 'Asset Number', 'Sub Number', 'Serial Number', 'Quantity',
+        'Total/Partial retirement', 'Cost Center', 'Description', 'Location', 'Acquisition Date',
+        'Acquisition Amount Euro', 'Acquisition Amount Local', 'Net Book Value Euro',
+        'Net Book Value Local', 'Asset Owner', 'Data Input Date']],
+      body: data.map(asset => [
+        asset.companyCode,
+        asset.plantCode,
+        asset.assetNumber,
+        asset.subNumber,
+        asset.serialNumber,
+        asset.quantity.toString(),
+        asset.totalPartialRetirement,
+        asset.costCenter,
+        asset.description,
+        asset.location,
+        asset.acquisitionDate ? asset.acquisitionDate.slice(0, 10) : '',
+        asset.acquisitionAmountEuro?.toString() || '',
+        asset.acquisitionAmountLocal?.toString() || '',
+        asset.netBookValueEuro?.toString() || '',
+        asset.netBookValueLocal?.toString() || '',
+        asset.assetOwner,
+        asset.dataInputDate ? asset.dataInputDate.slice(0, 10) : ''
+      ]),
+      startY: 80,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 4 },
+      headStyles: { fillColor: [255, 193, 7], textColor: 20, fontStyle: 'bold', halign: 'center', valign: 'middle' },
+      bodyStyles: { valign: 'middle' },
+      columnStyles: {
+        0: { minCellWidth: 60 },
+        1: { minCellWidth: 60 },
+        2: { minCellWidth: 80 },
+        3: { minCellWidth: 60 },
+        4: { minCellWidth: 80 },
+        5: { minCellWidth: 50 },
+        6: { minCellWidth: 80 },
+        7: { minCellWidth: 70 },
+        8: { minCellWidth: 100 },
+        9: { minCellWidth: 80 },
+        10: { minCellWidth: 70 },
+        11: { minCellWidth: 80 },
+        12: { minCellWidth: 80 },
+        13: { minCellWidth: 80 },
+        14: { minCellWidth: 80 },
+        15: { minCellWidth: 80 },
+        16: { minCellWidth: 120 }
+      },
+      didDrawPage: (data) => {
+        // Optionnel : ajouter un pied de page ou logo ici
+      }
+    });
+    // Section d'approbation espacée et encadrée
+    const approvalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 40 : 200;
+    autoTable(doc, {
+      body: [[
+        { content: 'Asset Owner manager', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
+        { content: 'Local Finance Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
+        { content: 'Plant Manager Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
+        { content: 'Bernhard Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } }
+      ]],
+      startY: approvalY,
+      theme: 'plain',
+      styles: { fontSize: 14, halign: 'center', valign: 'middle', cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] },
+      tableLineWidth: 1,
+      tableLineColor: [180, 180, 180],
+      columnStyles: {
+        0: { cellWidth: 180 },
+        1: { cellWidth: 180 },
+        2: { cellWidth: 180 },
+        3: { cellWidth: 180 }
+      }
+    });
+    doc.save('asset-scrap-report.pdf');
+  };
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Asset Scrap Request</h1>
@@ -114,11 +205,10 @@ const AssetScrubPage = () => {
           + Ajouter un actif
         </button>
         <button
-          className={`bg-red-300 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${selected.length === 0 ? 'opacity-50 cursor-not-allowed' : 'bg-red-400 hover:bg-red-600'}`}
-          onClick={handleDelete}
-          disabled={selected.length === 0}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2"
+          onClick={handleExportPDF}
         >
-          <span role="img" aria-label="delete">🗑️</span> Supprimer ({selected.length})
+          <span role="img" aria-label="export">📄</span> Exporter en PDF
         </button>
       </div>
       {loading ? (
@@ -130,7 +220,6 @@ const AssetScrubPage = () => {
           <table className="min-w-full border">
             <thead>
               <tr className="bg-yellow-200">
-                <th></th>
                 <th>Company Code</th>
                 <th>Plant Code</th>
                 <th>Asset Number</th>
@@ -153,13 +242,6 @@ const AssetScrubPage = () => {
             <tbody>
               {data.map((row) => (
                 <tr key={row.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(row.id)}
-                      onChange={() => handleSelect(row.id)}
-                    />
-                  </td>
                   <td>{row.companyCode}</td>
                   <td>{row.plantCode}</td>
                   <td>{row.assetNumber}</td>
