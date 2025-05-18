@@ -5,8 +5,9 @@ import * as XLSX from 'xlsx';
 import InvestmentFormCreate from './InvestmentFormCreate';
 import { toast } from 'react-hot-toast';
 import { investmentFormService } from '../../services/investmentFormService';
-import TrackingModal from './TrackingModal';
 import useAuth from '../../hooks/useAuth.hook';
+import { investmentItemService } from '../../services/investmentItemService';
+import TrackingModal from './TrackingModal';
 
 interface InvestmentFormData {
   id?: number;
@@ -21,11 +22,30 @@ interface InvestmentFormData {
   total: number;
   status: string;
   items: any[];
-  numRitm?: string;
-  numCoupa?: string;
-  numIyras?: string;
-  et?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+}
+
+interface InvestmentItem {
+  id?: number;
+  description: string;
+  supplier: string;
+  unitCost: number;
+  quantity: number;
+  shipping: number;
+  subTotal: number;
+  total: number;
+  investmentFormId: number;
+  coupaNumber?: string;
+  rytmNumber?: string;
   ioNumber?: string;
+  iyrasNumber?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
 }
 
 interface ChartData {
@@ -49,14 +69,21 @@ const AssetsManagementPage: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<InvestmentFormData | null>(null);
   const [editForm, setEditForm] = useState<InvestmentFormData | null>(null);
   const [showEdit, setShowEdit] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // État pour le modal
-  const [deletePassword, setDeletePassword] = useState(''); // État pour le mot de passe
-  const [deleteError, setDeleteError] = useState<string | null>(null); // État pour les erreurs
-  const [deletingId, setDeletingId] = useState<number | null>(null); // ID de la demande à supprimer
-  const [showTracking, setShowTracking] = useState(false);
-  const [trackingForm, setTrackingForm] = useState<InvestmentFormData | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [search, setSearch] = useState('');
+  const [allItems, setAllItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [deleteItem, setDeleteItem] = useState(null);
+  const [trackingItem, setTrackingItem] = useState(null);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,29 +93,34 @@ const AssetsManagementPage: React.FC = () => {
         const response = await axiosInstance.get<InvestmentFormData[]>('/InvestmentForm');
         const forms = response.data;
         setFilteredForms(forms);
-        // 1. Préparer les données pour la courbe (groupement par date et status)
-        const statusList = ['Pending', 'Accepted', 'Rejected'];
+        // 1. Préparer les données pour la courbe (groupement par date et status des items)
+        const statusList = ['Pending', 'Approved', 'Rejected', 'Under-approval'];
         const grouped: Record<string, Record<string, number>> = {};
         forms.forEach(form => {
           const date = form.reqDate?.slice(0, 10);
           if (!date) return;
-          if (!grouped[date]) grouped[date] = { Pending: 0, Accepted: 0, Rejected: 0 };
-          if (statusList.includes(form.status)) grouped[date][form.status]++;
+          if (!grouped[date]) grouped[date] = { Pending: 0, Approved: 0, Rejected: 0, 'Under-approval': 0 };
+          form.items.forEach(item => {
+            const s = item.status || 'Pending';
+            if (statusList.includes(s)) grouped[date][s]++;
+            else grouped[date]['Pending']++;
+          });
         });
         // Générer les données pour recharts
         const allDates = Object.keys(grouped).sort();
         const chartData = allDates.map(date => ({
           date,
           Pending: grouped[date].Pending,
-          Accepted: grouped[date].Accepted,
-          Rejected: grouped[date].Rejected
+          Approved: grouped[date].Approved,
+          Rejected: grouped[date].Rejected,
+          'Under-approval': grouped[date]['Under-approval']
         }));
         setChartData(chartData);
-        // 2. Calculer les totaux pour les cards
-        const total = forms.length;
-        const pending = forms.filter(f => f.status === 'Pending').length;
-        const accepted = forms.filter(f => f.status === 'Accepted').length;
-        const rejected = forms.filter(f => f.status === 'Rejected').length;
+        // 2. Calculer les totaux pour les cards (par items)
+        const allItemsFlat = forms.flatMap(f => f.items || []);
+        const pending = allItemsFlat.filter(item => item.status === 'Pending').length;
+        const approved = allItemsFlat.filter(item => item.status === 'Approved').length;
+        const rejected = allItemsFlat.filter(item => item.status === 'Rejected').length;
         // 3. Calculer le budget mensuel (somme des total du mois courant)
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -100,9 +132,9 @@ const AssetsManagementPage: React.FC = () => {
           })
           .reduce((sum, f) => sum + (f.total || 0), 0);
         setSummary({
-          total,
+          total: forms.length,
           pending,
-          accepted,
+          approved,
           rejected,
           monthlyBudget
         });
@@ -133,6 +165,41 @@ const AssetsManagementPage: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const items = [];
+    filteredForms.forEach(form => {
+      form.items.forEach(item => {
+        items.push({
+          ...item,
+          formId: form.id,
+          region: form.region,
+          currency: form.currency,
+          location: form.location,
+          typeOfInvestment: form.typeOfInvestment,
+          reqDate: form.reqDate,
+          dueDate: form.dueDate,
+          status: item.status,
+          justification: form.justification,
+          observations: form.observations,
+        });
+      });
+    });
+    setAllItems(items);
+  }, [filteredForms]);
+
+  useEffect(() => {
+    // Calcul dynamique des cards à partir de allItems
+    const pending = allItems.filter(item => item.status === 'Pending').length;
+    const approved = allItems.filter(item => item.status === 'Approved').length;
+    const rejected = allItems.filter(item => item.status === 'Rejected').length;
+    setSummary(s => ({
+      ...s,
+      pending,
+      approved,
+      rejected
+    }));
+  }, [allItems]);
 
   function exportTableToExcel(forms: InvestmentFormData[]) {
     const wsData: any[][] = [];
@@ -223,8 +290,66 @@ const AssetsManagementPage: React.FC = () => {
     form.status.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleItemDetails = (item) => {
+    setSelectedItem(item);
+    setShowDetails(true);
+  };
+
+  const handleItemEdit = (item) => {
+    setEditItem(item);
+    setEditForm({
+      description: item.description,
+      supplier: item.supplier,
+      unitCost: item.unitCost,
+      quantity: item.quantity,
+      shipping: item.shipping || 0,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(f => ({ ...f, [name]: name === 'unitCost' || name === 'quantity' || name === 'shipping' ? Number(value) : value }));
+  };
+
+  const handleEditFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await investmentItemService.updateItem(editItem.id, { ...editItem, ...editForm });
+      toast.success('Item modifié !');
+      setShowEditModal(false);
+      setEditItem(null);
+      window.location.reload();
+    } catch (err) {
+      toast.error('Erreur lors de la modification');
+    }
+  };
+
+  const handleItemDelete = (item) => {
+    setDeleteItem(item);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteItem = async () => {
+    try {
+      await investmentItemService.deleteItem(deleteItem.id);
+      toast.success('Item supprimé !');
+      setShowDeleteModal(false);
+      setDeleteItem(null);
+      window.location.reload();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleTracking = (item) => {
+    setTrackingItem(item);
+    setShowTrackingModal(true);
+  };
+
   return (
     <div className="p-8 max-w-6xl mx-auto">
+      <div style={{display: 'none'}}>{refresh}</div>
       <h1 className="text-2xl font-bold mb-6">Asset Management Dashboard</h1>
       {/* FILTRE PAR STATUS */}
       <div className="mb-6 flex flex-wrap gap-4 items-center">
@@ -236,8 +361,9 @@ const AssetsManagementPage: React.FC = () => {
         >
           <option value="All">All</option>
           <option value="Pending">Pending</option>
-          <option value="Accepted">Accepted</option>
+          <option value="Approved">Approved</option>
           <option value="Rejected">Rejected</option>
+          <option value="Under-approval">Under-approval</option>
         </select>
       </div>
       {/* BARRE DE RECHERCHE */}
@@ -251,22 +377,14 @@ const AssetsManagementPage: React.FC = () => {
         />
       </div>
       {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gray-100 rounded-xl shadow p-6 text-center">
           <div className="text-lg font-semibold mb-2">Total Requests</div>
           <div className="text-3xl font-bold">{summaryFiltered.total}</div>
         </div>
-        <div className="bg-orange-100 text-orange-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Pending Requests</div>
-          <div className="text-3xl font-bold">{summaryFiltered.pending}</div>
-        </div>
-        <div className="bg-green-100 text-green-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Accepted Assets</div>
-          <div className="text-3xl font-bold">{summaryFiltered.accepted}</div>
-        </div>
-        <div className="bg-red-100 text-red-800 rounded-xl shadow p-6 text-center">
+        <div className="bg-blue-100 text-blue-800 rounded-xl shadow p-6 text-center">
           <div className="text-lg font-semibold mb-2">Monthly Budget</div>
-          <div className="text-3xl font-bold">£{summaryFiltered.monthlyBudget.toLocaleString()}</div>
+          <div className="text-3xl font-bold">€{summaryFiltered.monthlyBudget.toLocaleString()}</div>
         </div>
       </div>
       {/* COURBE PAR STATUS */}
@@ -280,11 +398,14 @@ const AssetsManagementPage: React.FC = () => {
             {(statusFilter === 'All' || statusFilter === 'Pending') && (
               <Line type="monotone" dataKey="Pending" stroke="#FFA500" strokeWidth={3} dot={{ r: 5 }} name="Pending" />
             )}
-            {(statusFilter === 'All' || statusFilter === 'Accepted') && (
-              <Line type="monotone" dataKey="Accepted" stroke="#43a047" strokeWidth={3} dot={{ r: 5 }} name="Accepted" />
+            {(statusFilter === 'All' || statusFilter === 'Approved') && (
+              <Line type="monotone" dataKey="Approved" stroke="#43a047" strokeWidth={3} dot={{ r: 5 }} name="Approved" />
             )}
             {(statusFilter === 'All' || statusFilter === 'Rejected') && (
               <Line type="monotone" dataKey="Rejected" stroke="#e53935" strokeWidth={3} dot={{ r: 5 }} name="Rejected" />
+            )}
+            {(statusFilter === 'All' || statusFilter === 'Under-approval') && (
+              <Line type="monotone" dataKey="Under-approval" stroke="#f57f17" strokeWidth={3} dot={{ r: 5 }} name="Under-approval" />
             )}
           </LineChart>
         </ResponsiveContainer>
@@ -306,7 +427,7 @@ const AssetsManagementPage: React.FC = () => {
           )}
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Requests Table</h2>
+              <h2 className="text-xl font-bold">Items Table</h2>
               <button
                 className="bg-[#43a047] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#388e3c] transition"
                 onClick={() => exportTableToExcel(searchedForms)}
@@ -318,57 +439,50 @@ const AssetsManagementPage: React.FC = () => {
               <table className="min-w-full border">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border px-2 py-1">ID</th>
+                    <th className="border px-2 py-1">Item ID</th>
+                    <th className="border px-2 py-1">Form ID</th>
+                    <th className="border px-2 py-1">Description</th>
+                    <th className="border px-2 py-1">Supplier</th>
+                    <th className="border px-2 py-1">Unit Cost</th>
+                    <th className="border px-2 py-1">Quantity</th>
                     <th className="border px-2 py-1">Region</th>
-                    <th className="border px-2 py-1">Currency</th>
-                    <th className="border px-2 py-1">Location</th>
-                    <th className="border px-2 py-1">Type</th>
-                    <th className="border px-2 py-1">Request Date</th>
                     <th className="border px-2 py-1">Status</th>
-                    <th className="border px-2 py-1">Total</th>
                     <th className="border px-2 py-1">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {searchedForms.map(form => (
-                    <tr key={form.id} className="hover:bg-gray-50">
-                      <td className="border px-2 py-1">{form.id}</td>
-                      <td className="border px-2 py-1">{form.region}</td>
-                      <td className="border px-2 py-1">{form.currency}</td>
-                      <td className="border px-2 py-1">{form.location}</td>
-                      <td className="border px-2 py-1">{form.typeOfInvestment}</td>
-                      <td className="border px-2 py-1">{form.reqDate?.slice(0, 10)}</td>
-                      <td className="border px-2 py-1">{form.status}</td>
-                      <td className="border px-2 py-1">{form.total.toFixed(2)}</td>
-                      <td className="border px-2 py-1 space-x-2">
-                        <button
-                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                          onClick={() => setSelectedForm(form)}
-                        >
-                          Details
-                        </button>
-                        <button
-                          className="bg-purple-600 text-white px-3 py-1 rounded text-sm"
-                          onClick={() => { setTrackingForm(form); setShowTracking(true); }}
-                        >
-                          Suivi
-                        </button>
-                        <button
-                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
-                          onClick={() => handleEdit(form)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                          onClick={() => handleDelete(form.id!)}
-                          disabled={deletingId === form.id}
-                        >
-                          {deletingId === form.id ? 'Deleting…' : 'Delete'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {allItems.map(item => {
+                    console.log('Item affiché dans le tableau:', item); // Debug
+                    return (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="border px-2 py-1">{item.id}</td>
+                        <td className="border px-2 py-1">{item.formId}</td>
+                        <td className="border px-2 py-1">{item.description}</td>
+                        <td className="border px-2 py-1">{item.supplier}</td>
+                        <td className="border px-2 py-1">{item.unitCost}</td>
+                        <td className="border px-2 py-1">{item.quantity}</td>
+                        <td className="border px-2 py-1">{item.region}</td>
+                        <td className="border px-2 py-1">
+                          {item.status && (
+                            <span className={
+                              item.status === 'Approved' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold' :
+                              item.status === 'Rejected' ? 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold' :
+                              item.status === 'Under-approval' ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold' :
+                              'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold'
+                            }>
+                              {item.status}
+                            </span>
+                          )}
+                        </td>
+                        <td className="border px-2 py-1 space-x-2">
+                          <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDetails(item)}>Details</button>
+                          <button className="bg-yellow-500 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemEdit(item)}>Edit</button>
+                          <button className="bg-red-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDelete(item)}>Delete</button>
+                          <button className="bg-purple-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleTracking(item)}>Suivi</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -392,7 +506,7 @@ const AssetsManagementPage: React.FC = () => {
                   <div><b>Request Date:</b> {selectedForm.reqDate?.slice(0, 10)}</div>
                   <div><b>Due Date:</b> {selectedForm.dueDate?.slice(0, 10)}</div>
                   <div><b>Status:</b> {selectedForm.status}</div>
-                  <div><b>Total:</b> {selectedForm.total.toFixed(2)}</div>
+                  <div><b>Total:</b> {selectedForm.items.reduce((acc, item) => acc + (item.unitCost || 0), 0).toFixed(2)}</div>
                 </div>
                 <div className="mb-2"><b>Justification:</b> {selectedForm.justification}</div>
                 <div className="mb-2"><b>Observations:</b> {selectedForm.observations}</div>
@@ -426,61 +540,103 @@ const AssetsManagementPage: React.FC = () => {
               </div>
             </div>
           )}
-          {/* Ajouter le modal de suppression */}
-          {showDeleteModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-                <h3 className="text-lg font-semibold mb-4">Confirmer la suppression</h3>
-                <p className="mb-4">Veuillez entrer votre mot de passe pour confirmer la suppression :</p>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 mb-4"
-                  placeholder="Mot de passe"
-                />
-                {deleteError && <p className="text-red-600 mb-4">{deleteError}</p>}
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      setShowDeleteModal(false);
-                      setDeletePassword('');
-                      setDeleteError(null);
-                      setDeletingId(null);
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                    disabled={!deletePassword}
-                  >
-                    Supprimer
-                  </button>
+          {showDetails && selectedItem && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
+                  onClick={() => setShowDetails(false)}
+                >×</button>
+                <h3 className="text-xl font-bold mb-4">Item Details #{selectedItem.id}</h3>
+                <div><b>Description:</b> {selectedItem.description}</div>
+                <div><b>Supplier:</b> {selectedItem.supplier}</div>
+                <div><b>Unit Cost:</b> {selectedItem.unitCost}</div>
+                <div><b>Quantity:</b> {selectedItem.quantity}</div>
+                <div><b>Region:</b> {selectedItem.region}</div>
+                <div><b>Status:</b> {selectedItem.status}</div>
+                {/* Ajoute d'autres infos si besoin */}
+              </div>
+            </div>
+          )}
+          {showEditModal && editItem && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
+                  onClick={() => setShowEditModal(false)}
+                >×</button>
+                <h3 className="text-xl font-bold mb-4">Edit Item #{editItem.id}</h3>
+                <form onSubmit={handleEditFormSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <input name="description" value={editForm.description} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Supplier</label>
+                    <input name="supplier" value={editForm.supplier} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Unit Cost</label>
+                    <input name="unitCost" type="number" min="0" step="0.01" value={editForm.unitCost} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Quantity</label>
+                    <input name="quantity" type="number" min="1" value={editForm.quantity} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Shipping</label>
+                    <input name="shipping" type="number" min="0" step="0.01" value={editForm.shipping} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" />
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-4">
+                    <button type="button" className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowEditModal(false)}>Annuler</button>
+                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          {showDeleteModal && deleteItem && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
+                  onClick={() => setShowDeleteModal(false)}
+                >×</button>
+                <h3 className="text-xl font-bold mb-4">Confirmer la suppression</h3>
+                <p className="mb-4">Voulez-vous vraiment supprimer l'item <b>{deleteItem.description}</b> ?</p>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <button type="button" className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowDeleteModal(false)}>Annuler</button>
+                  <button type="button" className="px-4 py-2 bg-red-600 text-white rounded" onClick={confirmDeleteItem}>Supprimer</button>
                 </div>
               </div>
             </div>
           )}
-          {showTracking && trackingForm && (
+          {showTrackingModal && trackingItem && (
             <TrackingModal
-              trackingData={trackingForm}
-              onClose={() => { setShowTracking(false); setTrackingForm(null); }}
-              onSave={async (fields) => {
-                try {
-                  await axiosInstance.put(`/InvestmentForm/${trackingForm.id}`, {
-                    ...trackingForm,
-                    ...fields,
-                    status: 'Accepted',
-                  });
-                  toast.success('Informations de suivi enregistrées !');
-                  setShowTracking(false);
-                  setTrackingForm(null);
-                  window.location.reload();
-                } catch (err) {
-                  toast.error('Erreur lors de l\'enregistrement du suivi');
-                }
+              item={trackingItem}
+              onClose={() => setShowTrackingModal(false)}
+              onStatusUpdate={async (updatedItem) => {
+                const response = await investmentItemService.updateTracking(updatedItem.id, updatedItem);
+                console.log('Réponse backend après update:', response?.data || response);
+                setShowTrackingModal(false);
+                setAllItems(items =>
+                  items.map(item =>
+                    item.id === updatedItem.id
+                      ? { ...item, ...updatedItem, status: updatedItem.status }
+                      : item
+                  )
+                );
+                setFilteredForms(forms =>
+                  forms.map(form => ({
+                    ...form,
+                    items: form.items.map(item =>
+                      item.id === updatedItem.id
+                        ? { ...item, ...updatedItem, status: updatedItem.status }
+                        : item
+                    )
+                  }))
+                );
+                setRefresh(r => r + 1);
               }}
             />
           )}

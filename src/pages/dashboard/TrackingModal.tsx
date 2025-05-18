@@ -1,81 +1,139 @@
 import React, { useState } from 'react';
 
-interface TrackingFields {
-  numRitm?: string;
-  numCoupa?: string;
-  numIyras?: string;
-  ioNumber?: string;
-}
+const TrackingModal = ({ item, onClose, onStatusUpdate }) => {
+  const [fields, setFields] = useState({
+    coupaNumber: item.coupaNumber || '',
+    rytmNumber: item.rytmNumber || '',
+    ioNumber: item.ioNumber || '',
+    iyrasNumber: item.iyrasNumber || '',
+    status: item.status || 'Pending'
+  });
+  const [error, setError] = useState('');
 
-interface TrackingModalProps {
-  trackingData: TrackingFields & { total?: number };
-  onClose: () => void;
-  onSave: (fields: TrackingFields) => void;
-}
+  const unitCost = item.unitCost;
+  const showIyras = unitCost > 1000;
+  const showIo = unitCost > 150;
+  const showCoupa = true;
+  const showRytm = true;
 
-const TrackingModal: React.FC<TrackingModalProps> = ({ trackingData, onClose, onSave }) => {
-  const [fields, setFields] = useState<TrackingFields>({ ...trackingData });
-  const [saving, setSaving] = useState(false);
+  // Champs requis selon le montant
+  const requiredFields = [];
+  if (showIyras) requiredFields.push('iyrasNumber');
+  if (showIo) requiredFields.push('ioNumber');
+  if (showCoupa) requiredFields.push('coupaNumber');
+  if (showRytm) requiredFields.push('rytmNumber');
 
-  const isOpex = (trackingData.total ?? 0) < 1000;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFields({ ...fields, [e.target.name]: e.target.value });
+  // Couleurs selon statut/champ rempli
+  const getInputClass = (val) => {
+    if (fields.status === 'Rejected') return 'border-red-500 bg-red-100';
+    if (val) return 'border-green-500 bg-green-100';
+    return 'border-gray-300';
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    await onSave(fields);
-    setSaving(false);
+  // Gestion des boutons
+  const handleStatus = (status) => {
+    if (status === 'Approved') {
+      // Validation : tous les champs requis doivent être remplis
+      for (const key of requiredFields) {
+        if (!fields[key]) {
+          setError('Veuillez remplir tous les champs requis avant d\'approuver.');
+          return;
+        }
+      }
+    }
+    setError('');
+    setFields(f => ({
+      ...f,
+      status,
+      ...(status === 'Rejected'
+        ? { coupaNumber: '', rytmNumber: '', ioNumber: '', iyrasNumber: '' }
+        : {})
+    }));
   };
+
+  const handleChange = (e) => {
+    setFields(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const handleSave = () => {
+    if (fields.status === 'Approved') {
+      for (const key of requiredFields) {
+        if (!fields[key]) {
+          setError('Veuillez remplir tous les champs requis avant d\'approuver.');
+          return;
+        }
+      }
+    }
+    setError('');
+    onStatusUpdate({ ...item, ...fields });
+  };
+
+  // Désactivation IO/COUPA/RYTM si YIRAS non rempli (>1000€)
+  const disableOtherFields = showIyras && !fields.iyrasNumber;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-8 max-w-2xl w-full relative">
-        <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
-          onClick={onClose}
-        >
-          ×
-        </button>
-        <h3 className="text-xl font-bold mb-4">Informations de suivi</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full relative">
+        <button className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl" onClick={onClose}>×</button>
+        <h3 className="text-xl font-bold mb-4">Suivi de l'item #{item.id}</h3>
+        {showIyras && (
           <div>
-            <label className="block text-xs font-medium mb-1 text-gray-600">Numéro RITM (ServiceNow)</label>
-            <input name="numRitm" value={fields.numRitm || ''} onChange={handleChange} placeholder="RITM..." className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
+            <label>YIRAS number</label>
+            <input
+              name="iyrasNumber"
+              value={fields.iyrasNumber}
+              onChange={handleChange}
+              className={`w-full border rounded px-3 py-2 mb-2 ${getInputClass(fields.iyrasNumber)}`}
+              disabled={fields.status !== 'Under-approval' && fields.status !== 'Pending'}
+            />
           </div>
+        )}
+        {showIo && (
           <div>
-            <label className="block text-xs font-medium mb-1 text-gray-600">Numéro Coupa (PR)</label>
-            <input name="numCoupa" value={fields.numCoupa || ''} onChange={handleChange} placeholder="PR..." className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
+            <label>IO number</label>
+            <input
+              name="ioNumber"
+              value={fields.ioNumber}
+              onChange={handleChange}
+              className={`w-full border rounded px-3 py-2 mb-2 ${getInputClass(fields.ioNumber)}`}
+              disabled={disableOtherFields}
+            />
           </div>
-          {!isOpex && (
-            <>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-gray-600">Numéro YIRAS</label>
-                <input name="numIyras" value={fields.numIyras || ''} onChange={handleChange} placeholder="YIRAS..." className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-gray-600">Numéro IO</label>
-                <input name="ioNumber" value={fields.ioNumber || ''} onChange={handleChange} placeholder="IO..." className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
-              </div>
-            </>
+        )}
+        {showCoupa && (
+          <div>
+            <label>COUPA number</label>
+            <input
+              name="coupaNumber"
+              value={fields.coupaNumber}
+              onChange={handleChange}
+              className={`w-full border rounded px-3 py-2 mb-2 ${getInputClass(fields.coupaNumber)}`}
+              disabled={disableOtherFields}
+            />
+          </div>
+        )}
+        {showRytm && (
+          <div>
+            <label>RYTM number</label>
+            <input
+              name="rytmNumber"
+              value={fields.rytmNumber}
+              onChange={handleChange}
+              className={`w-full border rounded px-3 py-2 mb-2 ${getInputClass(fields.rytmNumber)}`}
+              disabled={disableOtherFields}
+            />
+          </div>
+        )}
+        {error && <div className="text-red-600 mb-2">{error}</div>}
+        <div className="flex space-x-2 mt-4">
+          {showIyras && (
+            <button className="px-4 py-2 bg-yellow-500 text-white rounded" onClick={() => handleStatus('Under-approval')}>Under-approval</button>
           )}
+          <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={() => handleStatus('Approved')}>Approved</button>
+          <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={() => handleStatus('Rejected')}>Rejected</button>
         </div>
-        <div className="flex justify-end space-x-2 mt-4">
-          <button
-            className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-400 transition"
-            onClick={onClose}
-            disabled={saving}
-          >
-            Annuler
-          </button>
-          <button
-            className="bg-[#e53935] text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#b71c1c] transition"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
+        <div className="flex justify-end mt-4">
+          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleSave}>Enregistrer</button>
         </div>
       </div>
     </div>

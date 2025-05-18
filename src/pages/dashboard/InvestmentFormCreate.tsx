@@ -7,6 +7,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 interface InvestmentItem {
+  id?: number;
   description: string;
   supplier: string;
   unitCost: number;
@@ -14,6 +15,10 @@ interface InvestmentItem {
   subTotal: number;
   quantity: number;
   total: number;
+  coupaNumber?: string;
+  rytmNumber?: string;
+  ioNumber?: string;
+  iyrasNumber?: string;
 }
 
 interface InvestmentFormData {
@@ -44,6 +49,10 @@ const defaultItem: InvestmentItem = {
   subTotal: 0,
   quantity: 1,
   total: 0,
+  coupaNumber: '',
+  rytmNumber: '',
+  ioNumber: '',
+  iyrasNumber: '',
 };
 
 interface InvestmentFormCreateProps {
@@ -58,19 +67,22 @@ const softGray = 'bg-gray-50';
 const borderGray = 'border-gray-200';
 
 function getItemDisplayNumber(items: InvestmentItem[], idx: number): string {
-  const name = items[idx].description.trim();
-  if (!name) return (idx + 1).toString();
-  let count = 0;
-  let sub = 0;
+  // On construit la liste des descriptions déjà rencontrées jusqu'à idx
+  const descs: string[] = [];
   for (let i = 0; i <= idx; i++) {
-    if (items[i].description.trim() === name) {
-      count++;
-      if (i === idx) sub = count;
+    const name = items[i].description.trim();
+    if (!descs.includes(name)) {
+      descs.push(name);
     }
   }
-  // Premier du nom : juste le numéro, sinon numéro.sous-numéro
-  const firstIdx = items.findIndex((it, i) => i <= idx && it.description.trim() === name);
-  const baseNum = firstIdx + 1;
+  const name = items[idx].description.trim();
+  const baseNum = descs.indexOf(name) + 1;
+
+  // Compter combien de fois cette description est déjà apparue avant idx
+  let sub = 0;
+  for (let i = 0; i <= idx; i++) {
+    if (items[i].description.trim() === name) sub++;
+  }
   return sub === 1 ? `${baseNum}` : `${baseNum}.${sub - 1}`;
 }
 
@@ -184,92 +196,110 @@ function exportFormToExcel(form: InvestmentFormData) {
 
 function exportFormToExcelPro(form: InvestmentFormData) {
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('Investment Form');
+  const sheet = workbook.addWorksheet('IT Investment Form');
+
+  // Police par défaut
+  sheet.properties.defaultRowHeight = 18;
+  sheet.eachRow(row => row.font = { name: 'Calibri', size: 11 });
 
   // Largeur des colonnes
   sheet.columns = [
-    { width: 4 }, // A
-    { width: 18 }, // B
-    { width: 38 }, // C
-    { width: 18 }, // D
-    { width: 12 }, // E
-    { width: 12 }, // F
-    { width: 14 }, // G
-    { width: 10 }, // H
-    { width: 14 }, // I
-    { width: 12 }, // J
-    { width: 14 }, // K
-    { width: 14 }, // L
+    { width: 6 }, // No.
+    { width: 18 }, // Item
+    { width: 45 }, // Description
+    { width: 18 }, // Supplier
+    { width: 12 }, // Unit Cost
+    { width: 12 }, // Shipping
+    { width: 14 }, // SubTotal
+    { width: 10 }, // Quantity
+    { width: 14 }, // Total
   ];
 
   // Titre fusionné
-  sheet.mergeCells('A1:L1');
+  sheet.mergeCells('A1:I1');
   const titleCell = sheet.getCell('A1');
   titleCell.value = 'IT Investment Form';
-  titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+  titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' }, name: 'Calibri' };
   titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
   titleCell.border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
 
-  // Encadré infos générales
-  sheet.mergeCells('A3:B3'); sheet.mergeCells('C3:D3');
-  sheet.mergeCells('E3:F3'); sheet.mergeCells('G3:H3');
-  sheet.mergeCells('I3:J3'); sheet.mergeCells('K3:L3');
-  sheet.mergeCells('A4:D4'); sheet.mergeCells('E4:H4'); sheet.mergeCells('I4:L4');
-  sheet.mergeCells('A5:D5'); sheet.mergeCells('E5:H5'); sheet.mergeCells('I5:L5');
-  sheet.mergeCells('A6:L6');
+  // Requested/Approved en haut à droite
+  sheet.mergeCells('H2:I2');
+  sheet.getCell('H2').value = 'Requested';
+  sheet.getCell('H2').alignment = { horizontal: 'center' };
+  sheet.getCell('H2').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('H2').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
+  sheet.mergeCells('H3:I3');
+  sheet.getCell('H3').value = 'Approved';
+  sheet.getCell('H3').alignment = { horizontal: 'center' };
+  sheet.getCell('H3').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('H3').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
 
-  sheet.getCell('A3').value = 'Region';
-  sheet.getCell('A3').font = { bold: true };
-  sheet.getCell('C3').value = form.region;
-  sheet.getCell('E3').value = 'Currency';
-  sheet.getCell('E3').font = { bold: true };
-  sheet.getCell('G3').value = form.currency;
-  sheet.getCell('I3').value = 'Requested';
-  sheet.getCell('I3').font = { bold: true };
-  sheet.getCell('K3').value = 'Approved';
-  sheet.getCell('K3').font = { bold: true };
-
-  sheet.getCell('A4').value = 'Location';
-  sheet.getCell('A4').font = { bold: true };
+  // Infos générales (Region, Currency, etc.)
+  sheet.getCell('A4').value = 'Region';
+  sheet.getCell('A4').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('B4').value = form.region;
+  sheet.getCell('C4').value = 'Currency';
+  sheet.getCell('C4').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('D4').value = form.currency;
   sheet.getCell('E4').value = '';
-  sheet.getCell('I4').value = 'Req. Date:';
-  sheet.getCell('I4').font = { bold: true };
-  sheet.getCell('J4').value = form.reqDate;
-  sheet.getCell('K4').value = 'Due Date:';
-  sheet.getCell('K4').font = { bold: true };
-  sheet.getCell('L4').value = form.dueDate;
+  sheet.getCell('F4').value = '';
+  sheet.getCell('G4').value = '';
+  sheet.getCell('H4').value = '';
+  sheet.getCell('I4').value = '';
 
-  sheet.getCell('A5').value = 'Type of Investment:';
-  sheet.getCell('A5').font = { bold: true };
-  sheet.getCell('E5').value = form.typeOfInvestment;
-  sheet.getCell('E5').alignment = { horizontal: 'center' };
+  sheet.getCell('A5').value = 'Location';
+  sheet.getCell('A5').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('B5').value = form.location;
+  sheet.getCell('C5').value = '';
+  sheet.getCell('D5').value = '';
+  sheet.getCell('E5').value = '';
+  sheet.getCell('F5').value = '';
+  sheet.getCell('G5').value = '';
+  sheet.getCell('H5').value = '';
+  sheet.getCell('I5').value = '';
 
-  sheet.getCell('A6').value = 'Justification:';
-  sheet.getCell('A6').font = { bold: true };
-  sheet.getCell('B6').value = form.justification;
-  sheet.getCell('B6').alignment = { wrapText: true };
+  sheet.getCell('A6').value = 'Type of Investment:';
+  sheet.getCell('A6').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('B6').value = form.typeOfInvestment;
+  sheet.getCell('C6').value = '';
+  sheet.getCell('D6').value = '';
+  sheet.getCell('E6').value = '';
+  sheet.getCell('F6').value = '';
+  sheet.getCell('G6').value = '';
+  sheet.getCell('H6').value = '';
+  sheet.getCell('I6').value = '';
 
-  // Encadré autour des infos générales
-  for (let row = 3; row <= 6; row++) {
-    for (let col = 1; col <= 12; col++) {
-      sheet.getCell(row, col).border = {
-        top: { style: 'thin', color: { argb: 'FF000000' } },
-        left: { style: 'thin', color: { argb: 'FF000000' } },
-        right: { style: 'thin', color: { argb: 'FF000000' } },
-        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-      };
-    }
+  sheet.getCell('A7').value = 'Justification:';
+  sheet.getCell('A7').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('B7').value = form.justification;
+  sheet.getCell('C7').value = '';
+  sheet.getCell('D7').value = '';
+  sheet.getCell('E7').value = '';
+  sheet.getCell('F7').value = '';
+  sheet.getCell('G7').value = '';
+  sheet.getCell('H7').value = '';
+  sheet.getCell('I7').value = '';
+
+  // Dates à droite
+  sheet.getCell('F4').value = 'Req. Date:';
+  sheet.getCell('F4').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('G4').value = form.reqDate;
+  sheet.getCell('H4').value = 'Due Date:';
+  sheet.getCell('H4').font = { bold: true, name: 'Calibri' };
+  sheet.getCell('I4').value = form.dueDate;
+
+  // Lignes horizontales (soulignement)
+  for (let col = 1; col <= 9; col++) {
+    sheet.getCell(8, col).border = { bottom: { style: 'thin', color: { argb: 'FF000000' } } };
   }
 
-  // Ligne vide
-  sheet.addRow([]);
-
-  // En-tête du tableau
+  // Tableau items
   const headerRow = sheet.addRow(['No.', 'Item', 'Description', 'Supplier', 'Unit Cost', 'Shipping', 'SubTotal', 'Quantity', 'Total']);
   headerRow.eachCell(cell => {
-    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+    cell.font = { bold: true, color: { argb: 'FF000000' }, name: 'Calibri' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = {
       top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' }
@@ -284,12 +314,13 @@ function exportFormToExcelPro(form: InvestmentFormData) {
     const name = item.description.trim();
     if (name !== lastItemName) {
       const row = sheet.addRow([`${itemNum}`, name, '', '', '', '', '', '', '']);
-      row.getCell(1).font = { bold: true };
-      row.getCell(2).font = { bold: true };
+      row.getCell(1).font = { bold: true, name: 'Calibri' };
+      row.getCell(2).font = { bold: true, name: 'Calibri' };
       row.eachCell(cell => {
         cell.border = {
           top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' }
         };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
       });
       lastItemName = name;
       subNum = 1;
@@ -315,7 +346,7 @@ function exportFormToExcelPro(form: InvestmentFormData) {
     subNum++;
   });
 
-  // Ligne grise pour compléter le tableau (optionnel)
+  // Lignes grises pour compléter le tableau
   for (let i = 0; i < 5; i++) {
     const row = sheet.addRow(['', '', '', '', '', '', '', '', '']);
     row.eachCell(cell => {
@@ -328,7 +359,7 @@ function exportFormToExcelPro(form: InvestmentFormData) {
 
   // Observations
   const obsRow = sheet.addRow(['Observations:', form.observations]);
-  obsRow.getCell(1).font = { bold: true };
+  obsRow.getCell(1).font = { bold: true, name: 'Calibri' };
   obsRow.getCell(2).alignment = { wrapText: true };
   sheet.mergeCells(`B${obsRow.number}:I${obsRow.number}`);
   obsRow.eachCell(cell => {
@@ -339,8 +370,8 @@ function exportFormToExcelPro(form: InvestmentFormData) {
 
   // Total
   const totalRow = sheet.addRow(['', '', '', '', '', '', '', 'Total:', form.total]);
-  totalRow.getCell(8).font = { bold: true };
-  totalRow.getCell(9).font = { bold: true };
+  totalRow.getCell(8).font = { bold: true, name: 'Calibri' };
+  totalRow.getCell(9).font = { bold: true, name: 'Calibri' };
   totalRow.eachCell(cell => {
     cell.border = {
       top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' }
@@ -399,8 +430,8 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
     const value = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
     items[idx] = calculateItemTotals({ ...items[idx], [e.target.name]: value });
     setForm({ ...form, items });
-    // Mettre à jour le total général
-    const total = Number(items.reduce((acc, it) => acc + it.total, 0).toFixed(2));
+    // Mettre à jour le total général (somme des unitCost)
+    const total = Number(items.reduce((acc, it) => acc + it.unitCost, 0).toFixed(2));
     setForm(f => ({ ...f, total }));
   };
 
@@ -411,7 +442,8 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
   const removeItem = (idx: number) => {
     const items = form.items.filter((_, i) => i !== idx);
     setForm({ ...form, items });
-    const total = Number(items.reduce((acc, it) => acc + it.total, 0).toFixed(2));
+    // Mettre à jour le total général (somme des unitCost)
+    const total = Number(items.reduce((acc, it) => acc + it.unitCost, 0).toFixed(2));
     setForm(f => ({ ...f, total }));
   };
 
