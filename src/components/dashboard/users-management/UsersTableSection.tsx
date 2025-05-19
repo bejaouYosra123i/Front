@@ -10,6 +10,26 @@ interface IProps {
   onDeleteClick: (user: IAuthUser) => void;
 }
 
+const ROLES = [
+  { value: 'MANAGER', label: 'Manager Général' },
+  { value: 'ITMANAGER', label: 'IT Manager' },
+  { value: 'HRMANAGER', label: 'HR Manager' },
+  { value: 'PLANTMANAGER', label: 'Plant Manager' },
+];
+
+const handleRoleChange = async (userId: string, newRole: string) => {
+  try {
+    await fetch(`/auth/users/${userId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: newRole }),
+    });
+    window.location.reload(); // Recharge la liste après modification
+  } catch (error) {
+    alert('Erreur lors de la mise à jour du rôle');
+  }
+};
+
 const UsersTableSection = ({ usersList, onDeleteClick }: IProps) => {
   const { user: loggedInUser } = useAuth();
   const navigate = useNavigate();
@@ -17,11 +37,19 @@ const UsersTableSection = ({ usersList, onDeleteClick }: IProps) => {
   const RoleClassNameCreator = (Roles: string[]) => {
     let className = 'px-3 py-1 text-white rounded-3xl ';
     if (Roles.includes(RolesEnum.ADMIN)) {
-      className += 'bg-[#9333EA]';
+      className += 'bg-[#9333EA]'; // violet
     } else if (Roles.includes(RolesEnum.MANAGER)) {
-      className += 'bg-[#0B96BC]';
+      className += 'bg-[#0B96BC]'; // bleu
     } else if (Roles.includes(RolesEnum.USER)) {
-      className += 'bg-[#FEC223]';
+      className += 'bg-[#FEC223] text-black'; // jaune
+    } else if (Roles.includes(RolesEnum.IT_MANAGER)) {
+      className += 'bg-[#22C55E]'; // vert
+    } else if (Roles.includes(RolesEnum.RH_MANAGER)) {
+      className += 'bg-[#EC4899]'; // rose
+    } else if (Roles.includes(RolesEnum.PLANT_MANAGER)) {
+      className += 'bg-[#2563EB]'; // bleu foncé
+    } else {
+      className += 'bg-gray-400';
     }
     return className;
   };

@@ -85,4 +85,7 @@ export interface IUpdateCredentialsDto {
     ADMIN = 'ADMIN',
     MANAGER = 'MANAGER', 
     USER = 'USER',
+    IT_MANAGER = 'IT_MANAGER',
+    RH_MANAGER = 'RH_MANAGER',
+    PLANT_MANAGER = 'PLANT_MANAGER',
   }

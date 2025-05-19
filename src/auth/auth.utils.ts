@@ -15,15 +15,15 @@ export const getSession = () => {
   return localStorage.getItem('accessToken');
 };
 
-export const allAccessRoles = [RolesEnum.ADMIN, RolesEnum.MANAGER, RolesEnum.USER];
-export const managerAccessRoles = [ RolesEnum.ADMIN, RolesEnum.MANAGER];
+export const allAccessRoles = [RolesEnum.ADMIN, RolesEnum.MANAGER, RolesEnum.USER, RolesEnum.IT_MANAGER, RolesEnum.RH_MANAGER, RolesEnum.PLANT_MANAGER];
+export const managerAccessRoles = [ RolesEnum.ADMIN, RolesEnum.MANAGER, RolesEnum.IT_MANAGER, RolesEnum.RH_MANAGER, RolesEnum.PLANT_MANAGER];
 export const adminAccessRoles = [ RolesEnum.ADMIN];
 
 
 // We need to specify which Roles can be updated by Logged-in user
 export const allowedRolesForUpdateArray = (loggedInUser?: IAuthUser): string[] => {
   return loggedInUser?.roles.includes(RolesEnum.ADMIN)
-    ? [ RolesEnum.MANAGER, RolesEnum.USER,RolesEnum.ADMIN]
+    ? [ RolesEnum.MANAGER, RolesEnum.USER, RolesEnum.ADMIN, RolesEnum.IT_MANAGER, RolesEnum.RH_MANAGER, RolesEnum.PLANT_MANAGER]
     : [];
 };
 

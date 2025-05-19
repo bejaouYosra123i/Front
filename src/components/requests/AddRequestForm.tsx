@@ -18,25 +18,15 @@ const AddRequestForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AddRequestFormInputs>();
 
-  // Simuler la signature automatique
-  const getAutoSignature = (managerRole: string) => {
-    return `${managerRole}: ${user?.firstName || ''} ${user?.lastName || ''} (auto) - ${new Date().toLocaleDateString()}`;
-  };
-
   const onSubmit = async (data: AddRequestFormInputs) => {
     setLoading(true);
     setError(null);
     try {
-      // Envoyer la demande au backend (adapter selon votre API)
+      // Envoyer la demande au backend sans signatures automatiques
       await requestService.submitRequest({
         ...data,
         requestedBy: user?.userName || 'inconnu',
-        signatures: {
-          manager: getAutoSignature('Manager'),
-          itManager: getAutoSignature('IT Manager'),
-          hrManager: getAutoSignature('HR Manager'),
-          plantManager: getAutoSignature('Plant Manager'),
-        },
+        signatures: {}, // signatures vides
         status: 'En attente',
       });
       setSuccess(true);
@@ -87,25 +77,21 @@ const AddRequestForm: React.FC = () => {
           <div className="font-semibold">Manager:</div>
           <div className="text-yellow-600">En attente</div>
           <div className="text-xs text-gray-400 mt-2">Signature requise</div>
-          <div className="mt-2 text-green-700 text-xs">{getAutoSignature('Manager')}</div>
         </div>
         <div className="border rounded p-3">
           <div className="font-semibold">IT Manager:</div>
           <div className="text-yellow-600">En attente</div>
           <div className="text-xs text-gray-400 mt-2">Signature requise</div>
-          <div className="mt-2 text-green-700 text-xs">{getAutoSignature('IT Manager')}</div>
         </div>
         <div className="border rounded p-3">
           <div className="font-semibold">HR Manager:</div>
           <div className="text-yellow-600">En attente</div>
           <div className="text-xs text-gray-400 mt-2">Signature requise</div>
-          <div className="mt-2 text-green-700 text-xs">{getAutoSignature('HR Manager')}</div>
         </div>
         <div className="border rounded p-3">
           <div className="font-semibold">Plant Manager:</div>
           <div className="text-yellow-600">En attente</div>
           <div className="text-xs text-gray-400 mt-2">Signature requise</div>
-          <div className="mt-2 text-green-700 text-xs">{getAutoSignature('Plant Manager')}</div>
         </div>
       </div>
       <div className="flex gap-4 mt-6">

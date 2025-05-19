@@ -16,6 +16,9 @@ interface PcRequest {
   reason: string;
   requestedBy: string;
   signatures: Record<string, string>;
+  approvals: Record<string, string>;
+  currentApprovals: number;
+  requiredApprovals: number;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -33,7 +36,9 @@ const PcRequestsListPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const { user } = useAuth();
-  const userRole = user?.roles?.[0];
+  const userRole = user?.userName || user?.firstName || user?.email;
+
+  const APPROVER_ROLES = ["MANAGER", "IT_MANAGER", "RH_MANAGER", "PLANT_MANAGER"];
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -120,20 +125,20 @@ const PcRequestsListPage: React.FC = () => {
   );
 
   const handleStatus = async (id: number, status: string) => {
-    console.log("handleStatus appelé avec id:", id, "status:", status);
-    if (!user?.roles || user.roles[0] !== "MANAGER") {
-      toast.error("Seul un manager peut valider ou refuser une demande.");
+    if (!user?.roles || !user.roles.some(r => APPROVER_ROLES.includes(r))) {
+      toast.error("Seuls les managers autorisés peuvent valider ou refuser une demande.");
       return;
     }
     try {
-      console.log("Avant appel requestService.updateStatus");
       await requestService.updateStatus(id, status);
-      console.log("Après appel requestService.updateStatus");
       setRequests(reqs => reqs.map(r => r.id === id ? { ...r, status } : r));
-      toast.success(`Demande ${status === 'Approved' ? 'validée' : 'refusée'} !`);
+      toast.success(`Votre approbation a été enregistrée !`);
     } catch (e: any) {
-      console.error("Erreur dans handleStatus:", e);
-      toast.error('Erreur lors de la mise à jour du statut');
+      if (e.response?.status === 400) {
+        toast.error("Vous avez déjà approuvé cette demande.");
+      } else {
+        toast.error('Erreur lors de la mise à jour du statut');
+      }
     }
   };
 
@@ -152,8 +157,9 @@ const PcRequestsListPage: React.FC = () => {
     doc.text(`Date: ${new Date(req.createdAt).toLocaleString()}`, 10, 100);
     doc.text('Signatures:', 10, 110);
     let y = 120;
-    Object.entries(req.signatures).forEach(([role, sig]) => {
-      doc.text(`${role}: ${sig}`, 15, y);
+    APPROVER_ROLES.forEach(role => {
+      const status = req.approvals && req.approvals[role] ? req.approvals[role] : 'Non signé';
+      doc.text(`${role} : ${status}`, 15, y);
       y += 10;
     });
     doc.save(`Demande_PC_${req.fullName.replace(/\s+/g, '_')}_${req.id}.pdf`);
@@ -254,6 +260,7 @@ const PcRequestsListPage: React.FC = () => {
                 <th className="px-4 py-2 border">Motif</th>
                 <th className="px-4 py-2 border">Demandé par</th>
                 <th className="px-4 py-2 border">Signatures</th>
+                <th className="px-4 py-2 border">Approbations</th>
                 <th className="px-4 py-2 border">Status</th>
                 <th className="px-4 py-2 border">Date</th>
                 <th className="px-4 py-2 border">Actions</th>
@@ -268,17 +275,30 @@ const PcRequestsListPage: React.FC = () => {
                   <td className="px-4 py-2 border">{req.pcType}</td>
                   <td className="px-4 py-2 border">{req.reason}</td>
                   <td className="px-4 py-2 border">{req.requestedBy}</td>
+                  <td className="px-4 py-2 border">—</td>
                   <td className="px-4 py-2 border">
+                    <div className="text-sm">
+                      <div className="font-semibold mb-1">
+                        Approbations ({Object.keys(req.approvals || {}).length}/{req.requiredApprovals})
+                      </div>
                     <ul className="text-xs">
-                      {Object.entries(req.signatures).map(([role, sig]) => (
-                        <li key={role}><b>{role}:</b> {sig}</li>
+                        {Object.entries(req.approvals || {}).map(([manager, status]) => (
+                          <li key={manager} className="flex items-center gap-2">
+                            <span className="font-medium">{manager}:</span>
+                            <span className={`px-2 py-1 rounded ${
+                              status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {status}
+                            </span>
+                          </li>
                       ))}
                     </ul>
+                    </div>
                   </td>
                   <td className={`px-4 py-2 border font-bold ${req.status === 'Approved' ? 'text-green-600' : req.status === 'Rejected' ? 'text-red-600' : 'text-yellow-600'}`}>{req.status}</td>
                   <td className="px-4 py-2 border">{new Date(req.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 border flex flex-col gap-2 items-center">
-                    {user?.roles?.includes("MANAGER") && req.status === 'Pending' && (
+                    {user?.roles?.some(r => APPROVER_ROLES.includes(r)) && req.status === 'Pending' && (
                       <div className="flex gap-2">
                         <button
                           className="bg-green-500 hover:bg-green-600 text-white rounded-full p-2 shadow flex items-center"
@@ -296,8 +316,8 @@ const PcRequestsListPage: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    {user?.roles && user.roles[0] !== "MANAGER" && req.status === 'Pending' && (
-                      <div className="text-xs text-gray-500">Seul un manager peut valider ou refuser.</div>
+                    {user?.roles && !user.roles.some(r => APPROVER_ROLES.includes(r)) && req.status === 'Pending' && (
+                      <div className="text-xs text-gray-500">Seuls les managers autorisés peuvent valider ou refuser.</div>
                     )}
                     <button
                       className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow flex items-center mt-1"
