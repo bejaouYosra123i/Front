@@ -149,6 +149,9 @@ const DashboardPage: React.FC = () => {
     setChartData(data);
   }, [visibleAssets]);
 
+  // Ajout d'une variable pour vérifier si l'utilisateur est admin
+  const isAdmin = user?.roles?.includes('ADMIN');
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Asset Lifecycle</h1>
@@ -251,9 +254,11 @@ const DashboardPage: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Location
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
+              {isAdmin && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -279,32 +284,30 @@ const DashboardPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {asset.location}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    {(!isUser || asset.assignedTo?.toLowerCase() === userName?.toLowerCase()) && (
-                      <>
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'In Maintenance')}
-                          className="text-yellow-600 hover:text-yellow-900"
-                        >
-                          Maintenance
-                        </button>
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'Replaced')}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Replace
-                        </button>
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'Scrap')}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Scrap
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
+                {isAdmin && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => updateAssetStatus(asset.id, 'In Maintenance')}
+                        className="text-yellow-600 hover:text-yellow-900"
+                      >
+                        Maintenance
+                      </button>
+                      <button
+                        onClick={() => updateAssetStatus(asset.id, 'Replaced')}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Replace
+                      </button>
+                      <button
+                        onClick={() => updateAssetStatus(asset.id, 'Scrap')}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Scrap
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

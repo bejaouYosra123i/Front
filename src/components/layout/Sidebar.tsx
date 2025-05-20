@@ -69,6 +69,8 @@ const Sidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const isAdmin = user?.roles?.includes('ADMIN');
+
   const navigation = [
     {
       group: 'main',
@@ -175,9 +177,11 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-        <li>
-          <a href="/dashboard/AssetScrubPage" className="sidebar-link">Asset Scrub</a>
-        </li>
+        {isAdmin && (
+          <li>
+            <a href="/dashboard/AssetScrubPage" className="sidebar-link">Asset Scrub</a>
+          </li>
+        )}
       </nav>
 
       {/* Footer */}
