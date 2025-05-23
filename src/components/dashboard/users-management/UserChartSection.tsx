@@ -1,84 +1,110 @@
 import { IAuthUser, RolesEnum } from '../../../types/auth.types';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface IProps {
   usersList: IAuthUser[];
 }
 
+// Couleurs synchronisées avec UserCountSection
+const ROLE_COLORS = [
+  '#D7000F', // ADMIN (rouge)
+  '#333333', // MANAGER (noir)
+  '#B0B0B0', // USER (gris)
+  '#FFD600', // IT_MANAGER (jaune)
+  '#7C3AED', // RH_MANAGER (violet)
+  '#FF9900', // PLANT_MANAGER (orange)
+];
+
+const BORDER_COLORS = [
+  '#B8000C', // ADMIN
+  '#222222', // MANAGER
+  '#888888', // USER
+  '#E6C200', // IT_MANAGER
+  '#5B21B6', // RH_MANAGER
+  '#C76A00', // PLANT_MANAGER
+];
+
 const UserChartSection = ({ usersList }: IProps) => {
-  const chartLabels = [RolesEnum.ADMIN, RolesEnum.MANAGER, RolesEnum.USER];
-  const chartValues = [];
+  const chartLabels = [
+    RolesEnum.ADMIN,
+    RolesEnum.MANAGER,
+    RolesEnum.USER,
+    RolesEnum.IT_MANAGER,
+    RolesEnum.RH_MANAGER,
+    RolesEnum.PLANT_MANAGER
+  ];
 
-  const adminsCount = usersList.filter((q) => q.roles.includes(RolesEnum.ADMIN)).length;
-  chartValues.push(adminsCount);
-
-  const managersCount = usersList.filter((q) => q.roles.includes(RolesEnum.MANAGER)).length;
-  chartValues.push(managersCount);
-
-  const usersCount = usersList.filter((q) => q.roles.includes(RolesEnum.USER)).length;
-  chartValues.push(usersCount);
+  const chartValues = [
+    usersList.filter((q) => q.roles.includes(RolesEnum.ADMIN)).length,
+    usersList.filter((q) => q.roles.includes(RolesEnum.MANAGER)).length,
+    usersList.filter((q) => q.roles.includes(RolesEnum.USER)).length,
+    usersList.filter((q) => q.roles.includes(RolesEnum.IT_MANAGER)).length,
+    usersList.filter((q) => q.roles.includes(RolesEnum.RH_MANAGER)).length,
+    usersList.filter((q) => q.roles.includes(RolesEnum.PLANT_MANAGER)).length
+  ];
 
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        position: 'top' as const,
+        labels: {
+          color: '#1f2937',
+          font: { size: 12 }
+        }
       },
       tooltip: {
         backgroundColor: '#1f2937',
         titleFont: { size: 12 },
         bodyFont: { size: 12 },
-      },
+        padding: 10
+      }
     },
     scales: {
       x: {
         grid: { display: false },
         ticks: {
           color: '#1f2937',
-          font: { size: 12 },
-        },
+          font: { size: 12 }
+        }
       },
       y: {
+        beginAtZero: true,
         ticks: {
-          stepSize: 5,
+          stepSize: 1,
           color: '#1f2937',
-          font: { size: 12 },
+          font: { size: 12 }
         },
         grid: {
           color: '#e5e7eb',
-          borderDash: [5, 5],
-        },
-      },
-    },
+          borderDash: [5, 5]
+        }
+      }
+    }
   };
 
   const chartData = {
     labels: chartLabels,
     datasets: [
       {
-        label: 'User Count',
+        label: "Nombre d'utilisateurs",
         data: chartValues,
-        borderColor: '#ff0000',
-        backgroundColor: 'rgba(255, 0, 0, 0.05)',
-        pointBackgroundColor: '#ff0000',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#ff0000',
-        pointHoverBorderColor: '#fff',
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-    ],
+        backgroundColor: ROLE_COLORS,
+        borderColor: BORDER_COLORS,
+        borderWidth: 2
+      }
+    ]
   };
 
   return (
     <div className='col-span-1 lg:col-span-3 bg-white p-5 rounded-lg shadow-sm'>
-      <h1 className='text-lg font-medium text-gray-900 mb-4 tracking-tight'>Users Chart</h1>
+      <h1 className='text-lg font-medium text-gray-900 mb-4 tracking-tight'>Répartition des utilisateurs par rôle</h1>
       <div className='bg-white p-3 rounded-lg'>
-        <Line options={chartOptions} data={chartData} />
+        <Bar options={chartOptions} data={chartData} />
       </div>
     </div>
   );

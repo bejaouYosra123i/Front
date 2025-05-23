@@ -7,10 +7,14 @@ import useAuth from '../../hooks/useAuth.hook';
 import Button from '../../components/general/Button';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
+import axiosInstance from '../../utils/axiosInstance';
 
 const LoginPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const { login } = useAuth();
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const loginSchema = Yup.object().shape({
     userName: Yup.string().required('User Name is required'),
@@ -44,6 +48,37 @@ const LoginPage = () => {
       } else {
         toast.error('An Error occurred. Please contact admins');
       }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      toast.error('Please enter your email or username');
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const { data: adminUsernames } = await axiosInstance.get('/Auth/admin-usernames');
+      if (!adminUsernames || adminUsernames.length === 0) {
+        toast.error('No admin found. Please contact IT.');
+        setForgotLoading(false);
+        return;
+      }
+      await Promise.all(adminUsernames.map((admin: string) =>
+        axiosInstance.post('/Messages/create', {
+          receiverUserName: admin,
+          text: `User with email/username: ${forgotEmail} requested a password reset. Please create a new password for this user and communicate it manually.`,
+          type: 'RESET_PASSWORD_REQUEST',
+          status: 'NEW'
+        })
+      ));
+      toast.success('Your request has been sent to the admin(s).');
+      setShowForgot(false);
+      setForgotEmail('');
+    } catch (err) {
+      toast.error('Error sending request. Please contact admin.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -92,6 +127,34 @@ const LoginPage = () => {
                 />
               </div>
             </form>
+            <div className="mt-2 text-center">
+              <button
+                type="button"
+                className="text-blue-600 hover:underline text-sm"
+                onClick={() => setShowForgot(f => !f)}
+              >
+                Forgot password?
+              </button>
+            </div>
+            {showForgot && (
+              <div className="mt-4 flex flex-col gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Enter your email or username"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+                <button
+                  type="button"
+                  className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium hover:bg-blue-700 transition"
+                  onClick={handleForgotPassword}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? 'Sending...' : 'Send request to admin'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

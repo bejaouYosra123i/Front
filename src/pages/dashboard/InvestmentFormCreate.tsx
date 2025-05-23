@@ -508,149 +508,161 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto p-8 rounded-2xl shadow-xl bg-white border border-gray-100">
-      <div className={`${softRed} text-white text-2xl font-semibold rounded-t-2xl px-6 py-4 mb-8 flex items-center justify-between shadow-sm`}>
-        <span className="tracking-wide">IT Investment Form</span>
-        <div className="flex items-center space-x-6">
-          <label className="flex items-center space-x-2 text-sm">
-            <input type="checkbox" checked={requested} onChange={e => setRequested(e.target.checked)} className="accent-[#e53935] rounded" />
-            <span>Requested</span>
+    <div className="w-full min-h-screen bg-yazaki-lightGray px-0 py-0 flex flex-col">
+      <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-8 pt-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-yazaki-black tracking-tight">Create a New Investment Request</h1>
+        <button type="button" onClick={onCancel} className="bg-yazaki-gray text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow hover:bg-yazaki-darkGray hover:text-white transition-all duration-200">Back</button>
+      </div>
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 w-full mx-0">
+        <div className="mb-8 text-lg text-gray-700">Fill out the form below to submit a new investment request. All fields are required for fast processing.</div>
+        <div className="flex flex-wrap gap-6 mb-8">
+          <label className="flex items-center space-x-2 text-base cursor-pointer">
+            <input
+              type="radio"
+              checked={requested}
+              onChange={() => { setRequested(true); setApproved(false); setForm(f => ({ ...f, status: 'Requested' })); }}
+              className="accent-yazaki-red rounded border border-gray-400 focus:ring-2 focus:ring-yazaki-red"
+            />
+            <span className="text-yazaki-red font-semibold">Requested</span>
           </label>
-          <label className="flex items-center space-x-2 text-sm">
-            <input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} className="accent-[#e53935] rounded" />
-            <span>Approved</span>
+          <label className="flex items-center space-x-2 text-base cursor-pointer">
+            <input
+              type="radio"
+              checked={approved}
+              onChange={() => { setRequested(false); setApproved(true); setForm(f => ({ ...f, status: 'Approved' })); }}
+              className="accent-green-600 rounded border border-gray-400 focus:ring-2 focus:ring-green-600"
+            />
+            <span className="text-green-700 font-semibold">Approved</span>
           </label>
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Region</label>
-          <select name="region" value={form.region} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
-            <option value="">Sélectionner une région</option>
-            <option value="Europe">Europe</option>
-            <option value="North America">North America</option>
-            <option value="Asia">Asia</option>
-            <option value="Africa">Africa</option>
-            <option value="South America">South America</option>
-            <option value="Middle East">Middle East</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Region</label>
+            <select name="region" value={form.region} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
+              <option value="">Select a region</option>
+              <option value="Europe">Europe</option>
+              <option value="North America">North America</option>
+              <option value="Asia">Asia</option>
+              <option value="Africa">Africa</option>
+              <option value="South America">South America</option>
+              <option value="Middle East">Middle East</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Currency</label>
+            <select name="currency" value={form.currency} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
+              <option value="">Select a currency</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CNY">CNY</option>
+              <option value="MAD">MAD</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Location</label>
+            <select name="location" value={form.location} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
+              <option value="">Select a location</option>
+              <option value="Paris">Paris</option>
+              <option value="Lyon">Lyon</option>
+              <option value="Berlin">Berlin</option>
+              <option value="New York">New York</option>
+              <option value="Casablanca">Casablanca</option>
+              <option value="Tokyo">Tokyo</option>
+              <option value="Shanghai">Shanghai</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Type of Investment</label>
+            <select name="typeOfInvestment" value={form.typeOfInvestment} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
+              <option value="">Select type</option>
+              <option value="New">New</option>
+              <option value="Refresh">Refresh</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Req. Date</label>
+            <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Due Date</label>
+            <input name="dueDate" type="date" value={form.dueDate} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Status</label>
+            <input name="status" value={form.status} onChange={handleChange} placeholder="Status" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-gray-800">Total</label>
+            <input name="total" value={form.total.toFixed(2)} readOnly className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700" placeholder="Total" />
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Currency</label>
-          <select name="currency" value={form.currency} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
-            <option value="">Sélectionner une devise</option>
-            <option value="EUR">EUR</option>
-            <option value="USD">USD</option>
-            <option value="GBP">GBP</option>
-            <option value="JPY">JPY</option>
-            <option value="CNY">CNY</option>
-            <option value="MAD">MAD</option>
-          </select>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold mb-1 text-gray-800">Justification</label>
+          <textarea name="justification" value={form.justification} onChange={handleChange} placeholder="Justification" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required />
         </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Location</label>
-          <select name="location" value={form.location} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
-            <option value="">Sélectionner un lieu</option>
-            <option value="Paris">Paris</option>
-            <option value="Lyon">Lyon</option>
-            <option value="Berlin">Berlin</option>
-            <option value="New York">New York</option>
-            <option value="Casablanca">Casablanca</option>
-            <option value="Tokyo">Tokyo</option>
-            <option value="Shanghai">Shanghai</option>
-            <option value="Autre">Autre</option>
-          </select>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold mb-1 text-gray-800">Observations</label>
+          <textarea name="observations" value={form.observations} onChange={handleChange} placeholder="Observations" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" />
         </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Type of Investment</label>
-          <select name="typeOfInvestment" value={form.typeOfInvestment} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
-            <option value="">Sélectionner le type</option>
-            <option value="New">New</option>
-            <option value="Refresh">Refresh</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Req. Date</label>
-          <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
-        </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Due Date</label>
-          <input name="dueDate" type="date" value={form.dueDate} onChange={handleChange} className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Status</label>
-          <input name="status" value={form.status} onChange={handleChange} placeholder="Status" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
-        </div>
-        <div>
-          <label className="block text-xs font-medium mb-1 text-gray-600">Total</label>
-          <input name="total" value={form.total.toFixed(2)} readOnly className="w-full border ${borderGray} rounded-lg px-3 py-2 bg-gray-100 text-gray-700" placeholder="Total" />
-        </div>
-        
-        
-      </div>
-      <div className="mb-4">
-        <label className="block text-xs font-medium mb-1 text-gray-600">Justification</label>
-        <textarea name="justification" value={form.justification} onChange={handleChange} placeholder="Justification" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
-      </div>
-      <div className="mb-4">
-        <label className="block text-xs font-medium mb-1 text-gray-600">Observations</label>
-        <textarea name="observations" value={form.observations} onChange={handleChange} placeholder="Observations" className="w-full border ${borderGray} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" />
-      </div>
-      <h2 className="font-bold text-lg mt-8 mb-2 border-b-2 border-[#e53935] pb-1 tracking-wide">Items</h2>
-      <table className="min-w-full border mb-4 rounded-xl overflow-hidden shadow-sm">
-        <thead>
-          <tr className="bg-gray-50 text-gray-700 text-sm">
-            <th className="border ${borderGray} px-2 py-1">No.</th>
-            <th className="border ${borderGray} px-2 py-1">Description</th>
-            <th className="border ${borderGray} px-2 py-1">Supplier</th>
-            <th className="border ${borderGray} px-2 py-1">Unit Cost</th>
-            <th className="border ${borderGray} px-2 py-1">Shipping</th>
-            <th className="border ${borderGray} px-2 py-1">Quantity</th>
-            <th className="border ${borderGray} px-2 py-1">SubTotal</th>
-            <th className="border ${borderGray} px-2 py-1">Total</th>
-            <th className="border ${borderGray} px-2 py-1">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {form.items.map((item, idx) => (
-            <tr key={idx} className="hover:bg-gray-100">
-              <td className="border ${borderGray} px-2 py-1 text-center font-semibold text-gray-700">{getItemDisplayNumber(form.items, idx)}</td>
-              <td className="border ${borderGray} px-2 py-1"><input name="description" value={item.description} onChange={e => handleItemChange(idx, e)} placeholder="Description" className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-50" required /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="supplier" value={item.supplier} onChange={e => handleItemChange(idx, e)} placeholder="Supplier" className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-50" required /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="unitCost" type="number" step="0.01" min="0" value={item.unitCost} onChange={e => handleItemChange(idx, e)} placeholder="Unit Cost" className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-50" required /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="shipping" type="number" step="0.01" min="0" value={item.shipping} onChange={e => handleItemChange(idx, e)} placeholder="Shipping" className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-50" /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="quantity" type="number" min="1" value={item.quantity} onChange={e => handleItemChange(idx, e)} placeholder="Quantity" className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-50" required /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="subTotal" value={item.subTotal.toFixed(2)} readOnly className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-200 text-gray-700" placeholder="SubTotal" /></td>
-              <td className="border ${borderGray} px-2 py-1"><input name="total" value={item.total.toFixed(2)} readOnly className="w-full border ${borderGray} rounded-md px-2 py-1 bg-gray-200 text-gray-700" placeholder="Total" /></td>
-              <td className="border ${borderGray} px-2 py-1 text-center">
-                <button type="button" className="text-[#e53935] underline font-medium" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>Supprimer</button>
-              </td>
+        <h2 className="font-bold text-lg mt-8 mb-2 border-b-2 border-yazaki-red pb-1 tracking-wide text-yazaki-red">Items</h2>
+        <table className="min-w-full border border-gray-200 mb-4 rounded-xl overflow-hidden shadow-sm">
+          <thead>
+            <tr className="bg-yazaki-lightGray text-yazaki-black text-sm">
+              <th className="border border-gray-200 px-2 py-1">No.</th>
+              <th className="border border-gray-200 px-2 py-1">Description</th>
+              <th className="border border-gray-200 px-2 py-1">Supplier</th>
+              <th className="border border-gray-200 px-2 py-1">Unit Cost</th>
+              <th className="border border-gray-200 px-2 py-1">Shipping</th>
+              <th className="border border-gray-200 px-2 py-1">Quantity</th>
+              <th className="border border-gray-200 px-2 py-1">SubTotal</th>
+              <th className="border border-gray-200 px-2 py-1">Total</th>
+              <th className="border border-gray-200 px-2 py-1">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button type="button" className="bg-[#43a047] text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-[#388e3c] transition" onClick={addItem}>Ajouter un item</button>
-      <div className="flex space-x-2 mt-4">
-        <button type="submit" className="bg-[#1e88e5] text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#1565c0] transition" disabled={loading}>
-          {loading ? (isEdit ? 'Modification…' : 'Envoi…') : (isEdit ? 'Modifier le formulaire' : 'Créer le formulaire')}
-        </button>
-        <button
-          type="button"
-          className="bg-[#00bcd4] text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#008ba3] transition"
-          onClick={() => exportFormToExcelPro(form)}
-        >
-          Download Excel
-        </button>
-        {onCancel && (
-          <button type="button" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-400 transition" onClick={onCancel} disabled={loading}>
-            Annuler
+          </thead>
+          <tbody>
+            {form.items.map((item, idx) => (
+              <tr key={idx} className="hover:bg-yazaki-gray">
+                <td className="border border-gray-200 px-2 py-1 text-center font-semibold text-yazaki-black">{getItemDisplayNumber(form.items, idx)}</td>
+                <td className="border border-gray-200 px-2 py-1"><input name="description" value={item.description} onChange={e => handleItemChange(idx, e)} placeholder="Description" className="w-full border border-gray-300 rounded-md px-2 py-1 bg-yazaki-lightGray focus:border-yazaki-red focus:ring-2 focus:ring-yazaki-red transition-all" required /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="supplier" value={item.supplier} onChange={e => handleItemChange(idx, e)} placeholder="Supplier" className="w-full border border-gray-300 rounded-md px-2 py-1 bg-yazaki-lightGray focus:border-yazaki-red focus:ring-2 focus:ring-yazaki-red transition-all" required /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="unitCost" type="number" step="0.01" min="0" value={item.unitCost} onChange={e => handleItemChange(idx, e)} placeholder="Unit Cost" className="w-full border border-gray-300 rounded-md px-2 py-1 bg-yazaki-lightGray focus:border-yazaki-red focus:ring-2 focus:ring-yazaki-red transition-all" required /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="shipping" type="number" step="0.01" min="0" value={item.shipping} onChange={e => handleItemChange(idx, e)} placeholder="Shipping" className="w-full border border-gray-300 rounded-md px-2 py-1 bg-yazaki-lightGray focus:border-yazaki-red focus:ring-2 focus:ring-yazaki-red transition-all" /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="quantity" type="number" min="1" value={item.quantity} onChange={e => handleItemChange(idx, e)} placeholder="Quantity" className="w-full border border-gray-300 rounded-md px-2 py-1 bg-yazaki-lightGray focus:border-yazaki-red focus:ring-2 focus:ring-yazaki-red transition-all" required /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="subTotal" value={item.subTotal.toFixed(2)} readOnly className="w-full border border-gray-300 rounded-md px-2 py-1 bg-gray-200 text-yazaki-black" placeholder="SubTotal" /></td>
+                <td className="border border-gray-200 px-2 py-1"><input name="total" value={item.total.toFixed(2)} readOnly className="w-full border border-gray-300 rounded-md px-2 py-1 bg-gray-200 text-yazaki-black" placeholder="Total" /></td>
+                <td className="border border-gray-200 px-2 py-1 text-center">
+                  <button type="button" className="text-yazaki-red underline font-medium" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button type="button" className="bg-yazaki-red text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-yazaki-black transition" onClick={addItem}>Add Item</button>
+        <div className="flex space-x-2 mt-4">
+          <button type="submit" className="bg-yazaki-red text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-black transition" disabled={loading}>
+            {loading ? (isEdit ? 'Updating…' : 'Sending…') : (isEdit ? 'Update Form' : 'Create Form')}
           </button>
-        )}
-      </div>
-      {error && <div className="text-[#e53935] mt-2">{error}</div>}
-      {success && <div className="text-green-600 mt-2">{isEdit ? 'Formulaire modifié avec succès !' : 'Formulaire créé avec succès !'}</div>}
-    </form>
+          <button
+            type="button"
+            className="bg-yazaki-gray text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-darkGray hover:text-white transition"
+            onClick={() => exportFormToExcelPro(form)}
+          >
+            Download Excel
+          </button>
+          {onCancel && (
+            <button type="button" className="bg-gray-300 text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-400 transition" onClick={onCancel} disabled={loading}>
+              Cancel
+            </button>
+          )}
+        </div>
+        {error && <div className="text-yazaki-red mt-2">{error}</div>}
+        {success && <div className="text-green-600 mt-2">{isEdit ? 'Form updated successfully!' : 'Form created successfully!'}</div>}
+      </form>
+    </div>
   );
 };
 
-export default InvestmentFormCreate; 
+export default InvestmentFormCreate;  

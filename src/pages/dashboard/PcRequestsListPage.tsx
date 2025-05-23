@@ -26,6 +26,16 @@ interface PcRequest {
 
 const PAGE_SIZE = 5;
 
+const pcTypeLabels: Record<string, string> = {
+  'PC de bureau': 'Desktop PC',
+  'PC Portable': 'Laptop',
+  'Clavier': 'Keyboard',
+  'Écran': 'Monitor',
+  'Câble': 'Cable',
+  'Modem': 'Modem',
+  'Souris': 'Mouse',
+};
+
 const PcRequestsListPage: React.FC = () => {
   const [requests, setRequests] = useState<PcRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,14 +263,13 @@ const PcRequestsListPage: React.FC = () => {
           <table className="min-w-full bg-white border rounded shadow">
             <thead>
               <tr>
-                <th className="px-4 py-2 border">Nom & Prénom</th>
-                <th className="px-4 py-2 border">Département</th>
-                <th className="px-4 py-2 border">Fonction</th>
-                <th className="px-4 py-2 border">Type de PC</th>
-                <th className="px-4 py-2 border">Motif</th>
-                <th className="px-4 py-2 border">Demandé par</th>
-                <th className="px-4 py-2 border">Signatures</th>
-                <th className="px-4 py-2 border">Approbations</th>
+                <th className="px-4 py-2 border">Full Name</th>
+                <th className="px-4 py-2 border">Department</th>
+                <th className="px-4 py-2 border">Position</th>
+                <th className="px-4 py-2 border">Equipment Type</th>
+                <th className="px-4 py-2 border">Reason</th>
+                <th className="px-4 py-2 border">Requested By</th>
+                <th className="px-4 py-2 border">Approvals</th>
                 <th className="px-4 py-2 border">Status</th>
                 <th className="px-4 py-2 border">Date</th>
                 <th className="px-4 py-2 border">Actions</th>
@@ -272,16 +281,15 @@ const PcRequestsListPage: React.FC = () => {
                   <td className="px-4 py-2 border">{req.fullName}</td>
                   <td className="px-4 py-2 border">{req.department}</td>
                   <td className="px-4 py-2 border">{req.function}</td>
-                  <td className="px-4 py-2 border">{req.pcType}</td>
+                  <td className="px-4 py-2 border">{pcTypeLabels[req.pcType] || req.pcType}</td>
                   <td className="px-4 py-2 border">{req.reason}</td>
                   <td className="px-4 py-2 border">{req.requestedBy}</td>
-                  <td className="px-4 py-2 border">—</td>
                   <td className="px-4 py-2 border">
                     <div className="text-sm">
                       <div className="font-semibold mb-1">
-                        Approbations ({Object.keys(req.approvals || {}).length}/{req.requiredApprovals})
+                        Approvals ({Object.keys(req.approvals || {}).length}/{req.requiredApprovals})
                       </div>
-                    <ul className="text-xs">
+                      <ul className="text-xs">
                         {Object.entries(req.approvals || {}).map(([manager, status]) => (
                           <li key={manager} className="flex items-center gap-2">
                             <span className="font-medium">{manager}:</span>
@@ -291,8 +299,8 @@ const PcRequestsListPage: React.FC = () => {
                               {status}
                             </span>
                           </li>
-                      ))}
-                    </ul>
+                        ))}
+                      </ul>
                     </div>
                   </td>
                   <td className={`px-4 py-2 border font-bold ${req.status === 'Approved' ? 'text-green-600' : req.status === 'Rejected' ? 'text-red-600' : 'text-yellow-600'}`}>{req.status}</td>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PATH_DASHBOARD } from '../../routes/paths';
 import useAuth from '../../hooks/useAuth.hook';
+import usePrivileges from '../../hooks/usePrivileges';
 import { 
   FiUsers, 
   FiMessageSquare, 
@@ -18,7 +19,9 @@ import {
   FiHome,
   FiPlusCircle,
   FiList,
-  FiRefreshCw
+  FiRefreshCw,
+  FiGrid,
+  FiDatabase
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
@@ -29,31 +32,34 @@ interface NavItemProps {
   to: string;
   isAdminOnly?: boolean;
   isCollapsed: boolean;
+  show?: boolean;
 }
 
-const NavItem = ({ icon, label, to, isAdminOnly = false, isCollapsed }: NavItemProps) => {
+const NavItem = ({ icon, label, to, isAdminOnly = false, isCollapsed, show }: NavItemProps) => {
   const { user } = useAuth();
   
   if (isAdminOnly && !user?.roles?.includes('ADMIN')) return null;
+  if (show === false) return null;
 
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center p-3 rounded-lg transition-all duration-200 group ${
-          isActive 
-            ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg'
-            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-        }`
+        `flex items-center p-3 rounded-lg transition-all duration-200 group text-sm font-medium
+        ${isActive
+          ? 'bg-yazaki-red/10 text-yazaki-red font-semibold shadow-md'
+          : 'text-yazaki-gray hover:bg-yazaki-lightGray hover:text-yazaki-red'}
+        focus:outline-none focus:ring-2 focus:ring-yazaki-red`
       }
+      style={{ marginBottom: '0.25rem' }}
       onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
     >
-      <span className="text-xl">{icon}</span>
+      <span className="text-lg mr-2 group-hover:text-yazaki-red transition-colors duration-200">{icon}</span>
       {!isCollapsed && (
         <motion.span
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="ml-3 font-medium"
+          className="ml-1"
         >
           {label}
         </motion.span>
@@ -70,16 +76,19 @@ const Sidebar = () => {
   };
 
   const isAdmin = user?.roles?.includes('ADMIN');
+  const privileges = usePrivileges();
+  const canManagePrivileges = isAdmin || privileges.includes('ManagePrivileges');
+  const canManageUsers = isAdmin || privileges.includes('ManageUsers');
 
   const navigation = [
     {
       group: 'main',
       items: [
         { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly: false },
-        { icon: <FiLayers />, label: 'Assets Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
+        { icon: <FiLayers />, label: 'Asset Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
         { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
-        { icon: <FiPlusCircle />, label: 'Ajouter une demande', to: PATH_DASHBOARD.addRequest, adminOnly: false },
-        { icon: <FiList />, label: 'Liste demandes PC', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
+        { icon: <FiPlusCircle />, label: 'New Request', to: PATH_DASHBOARD.addRequest, adminOnly: false },
+        { icon: <FiList />, label: 'Asset List', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
         { icon: <FiUser />, label: 'Profile', to: PATH_DASHBOARD.profile, adminOnly: false },
       ]
     },
@@ -98,19 +107,11 @@ const Sidebar = () => {
       label: 'Administration',
       icon: <FiSettings />,
       items: [
-        { icon: <FiUsers />, label: 'Users Management', to: PATH_DASHBOARD.usersManagement, adminOnly: true },
+        { icon: <FiUsers />, label: 'User Management', to: PATH_DASHBOARD.usersManagement, adminOnly: false, show: canManageUsers },
         { icon: <FiActivity />, label: 'System Logs', to: PATH_DASHBOARD.systemLogs, adminOnly: true },
+        { icon: <FiShield />, label: 'Privileges', to: PATH_DASHBOARD.privileges, adminOnly: false, show: canManagePrivileges },
         { icon: <FiActivity />, label: 'My Logs', to: PATH_DASHBOARD.myLogs, adminOnly: false },
-      ]
-    },
-    {
-      group: 'roles',
-      label: 'Role Pages',
-      icon: <FiShield />,
-      items: [
-        // Removed: { icon: <FiShield />, label: 'Admin Page', to: PATH_DASHBOARD.admin, adminOnly: true },
-        // Removed: { icon: <FiUserCheck />, label: 'Manager Page', to: PATH_DASHBOARD.manager, adminOnly: false },
-        // Removed: { icon: <FiUser />, label: 'User Page', to: PATH_DASHBOARD.user, adminOnly: false },
+        { icon: <FiRefreshCw style={{ color: '#ED1C24' }} />, label: 'Asset Scrap', to: '/dashboard/AssetScrubPage', adminOnly: true },
       ]
     }
   ];
@@ -121,33 +122,34 @@ const Sidebar = () => {
       animate={{
         width: isCollapsed ? '4rem' : '16rem'
       }}
-      className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden transition-all duration-300 shadow-xl"
+      className="flex flex-col min-h-screen h-full bg-yazaki-black text-yazaki-gray overflow-hidden transition-all duration-300 shadow-xl"
+      style={{ height: '100vh', minHeight: '100%', position: 'sticky', top: 0 }}
     >
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-gray-800">
+      <div className="p-4 flex items-center justify-between border-b border-yazaki-darkGray">
         {!isCollapsed && (
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-2"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-yazaki-red flex items-center justify-center">
               <FiUser className="text-white" />
             </div>
             <div className="text-sm font-medium">
-              <div>{user?.firstName} {user?.lastName}</div>
-              <div className="text-xs text-gray-400">{user?.email}</div>
+              <div className="text-yazaki-gray">{user?.firstName} {user?.lastName}</div>
+              <div className="text-xs text-yazaki-lightGray">{user?.email}</div>
             </div>
           </motion.div>
         )}
         {isCollapsed && (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center mx-auto">
+          <div className="w-8 h-8 rounded-full bg-yazaki-red flex items-center justify-center mx-auto">
             <FiUser className="text-white" />
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-1.5 rounded-full hover:bg-gray-800 transition-colors duration-200 text-gray-400 hover:text-white"
+          className="p-1.5 rounded-full hover:bg-yazaki-lightGray transition-colors duration-200 text-yazaki-gray hover:text-yazaki-red"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
@@ -159,12 +161,12 @@ const Sidebar = () => {
         {navigation.map((section) => (
           <div key={section.group} className="mb-6">
             {!isCollapsed && section.label && (
-              <div className="px-2 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="px-2 mb-2 text-xs font-semibold text-yazaki-darkGray uppercase tracking-wider">
                 {section.label}
               </div>
             )}
             <div className="space-y-1">
-              {section.items.map((item) => (
+              {section.items.filter(item => item.show === undefined || item.show).map((item) => (
                 <NavItem
                   key={item.to}
                   icon={item.icon}
@@ -177,11 +179,6 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-        {isAdmin && (
-          <li>
-            <a href="/dashboard/AssetScrubPage" className="sidebar-link">Asset Scrub</a>
-          </li>
-        )}
       </nav>
 
       {/* Footer */}
@@ -189,9 +186,9 @@ const Sidebar = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 border-t border-gray-800 text-center text-xs text-gray-500"
+          className="p-4 border-t border-yazaki-darkGray text-center text-xs text-yazaki-gray"
         >
-          © {new Date().getFullYear()} Asset Management
+          © {new Date().getFullYear()} Asset Management System
         </motion.div>
       )}
     </motion.div>

@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useReducer, useCallback, useEffect } from 'react';
+import { ReactNode, createContext, useReducer, useCallback, useEffect, useState } from 'react';
 import {
   IAuthContext,
   IAuthContextAction,
@@ -48,10 +48,17 @@ const initialAuthState: IAuthContextState = {
   isAuthenticated: false,
   isAuthLoading: true,
   user: undefined,
+  privileges: [],
 };
 
 // We create our context here and export it
-export const AuthContext = createContext<IAuthContext | null>(null);
+export const AuthContext = createContext<IAuthContext>({
+  ...initialAuthState,
+  login: async () => {},
+  register: async () => {},
+  logout: () => {},
+  updateCredentials: async () => {},
+});
 
 // We need an interface for our context props
 interface IProps {
@@ -59,8 +66,8 @@ interface IProps {
 }
 
 // We create a component to manage all auth functionalities and export it and use it
-const AuthContextProvider = ({ children }: IProps) => {
-  const [state, dispatch] = useReducer(authReducer, initialAuthState);
+const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<IAuthContextState>(initialAuthState);
   const navigate = useNavigate();
 
   // Initialize Method
@@ -75,20 +82,37 @@ const AuthContextProvider = ({ children }: IProps) => {
         // In response, we receive jwt token and user data
         const { newToken, userInfo } = response.data;
         setSession(newToken);
-        dispatch({
-          type: IAuthContextActionTypes.LOGIN,
-          payload: userInfo,
+        // Charger les privilèges comme dans login
+        const userId = userInfo.id;
+        let privileges: string[] = [];
+        try {
+          const res = await axiosInstance.get(`/Privilege/user/${userId}`);
+          privileges = res.data.map((p: any) => p.privilegeName);
+        } catch {
+          privileges = [];
+        }
+        setState({
+          isAuthenticated: true,
+          isAuthLoading: false,
+          user: userInfo,
+          privileges,
         });
       } else {
         setSession(null);
-        dispatch({
-          type: IAuthContextActionTypes.LOGOUT,
+        setState({
+          isAuthenticated: false,
+          isAuthLoading: false,
+          user: undefined,
+          privileges: [],
         });
       }
     } catch (error) {
       setSession(null);
-      dispatch({
-        type: IAuthContextActionTypes.LOGOUT,
+      setState({
+        isAuthenticated: false,
+        isAuthLoading: false,
+        user: undefined,
+        privileges: [],
       });
     }
   }, []);
@@ -152,9 +176,19 @@ const AuthContextProvider = ({ children }: IProps) => {
     // In response, we receive jwt token and user data
     const { newToken, userInfo } = response.data;
     setSession(newToken);
-    dispatch({
-      type: IAuthContextActionTypes.LOGIN,
-      payload: userInfo,
+    const userId = userInfo.id;
+    let privileges: string[] = [];
+    try {
+      const res = await axiosInstance.get(`/Privilege/user/${userId}`);
+      privileges = res.data.map((p: any) => p.privilegeName);
+    } catch {
+      privileges = [];
+    }
+    setState({
+      isAuthenticated: true,
+      isAuthLoading: false,
+      user: userInfo,
+      privileges,
     });
     navigate(PATH_AFTER_LOGIN);
   }, []);
@@ -162,8 +196,11 @@ const AuthContextProvider = ({ children }: IProps) => {
   // Logout Method
   const logout = useCallback(() => {
     setSession(null);
-    dispatch({
-      type: IAuthContextActionTypes.LOGOUT,
+    setState({
+      isAuthenticated: false,
+      isAuthLoading: false,
+      user: undefined,
+      privileges: [],
     });
     navigate(PATH_AFTER_LOGOUT);
   }, []);
@@ -171,11 +208,9 @@ const AuthContextProvider = ({ children }: IProps) => {
   // We create an object for values of context provider
   // This will keep our codes more readable
   const valuesObject = {
-    isAuthenticated: state.isAuthenticated,
-    isAuthLoading: state.isAuthLoading,
-    user: state.user,
-    register,
+    ...state,
     login,
+    register,
     logout,
     updateCredentials
   };

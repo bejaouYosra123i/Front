@@ -8,6 +8,9 @@ import { investmentFormService } from '../../services/investmentFormService';
 import useAuth from '../../hooks/useAuth.hook';
 import { investmentItemService } from '../../services/investmentItemService';
 import TrackingModal from './TrackingModal';
+import usePrivileges from '../../hooks/usePrivileges';
+import { Navigate } from 'react-router-dom';
+import { PATH_PUBLIC } from '../../routes/paths';
 
 interface InvestmentFormData {
   id?: number;
@@ -55,8 +58,11 @@ interface ChartData {
 
 const AssetsManagementPage: React.FC = () => {
   const { user } = useAuth();
-  if (!user?.roles?.includes('ADMIN')) {
-    return <div className="text-red-600 font-bold text-center p-8">Accès refusé : réservé aux administrateurs.</div>;
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const canManageAssets = isAdmin || privileges.includes('ManageAssets');
+  if (!canManageAssets) {
+    return <Navigate to={PATH_PUBLIC.unauthorized} />;
   }
 
   const [chartData, setChartData] = useState<ChartData[]>([]);
@@ -173,6 +179,7 @@ const AssetsManagementPage: React.FC = () => {
         items.push({
           ...item,
           formId: form.id,
+          investmentFormId: form.id,
           region: form.region,
           currency: form.currency,
           location: form.location,
@@ -296,7 +303,7 @@ const AssetsManagementPage: React.FC = () => {
   };
 
   const handleItemEdit = (item) => {
-    setEditItem(item);
+    setEditItem({ ...item, investmentFormId: item.investmentFormId });
     setEditForm({
       description: item.description,
       supplier: item.supplier,
@@ -315,7 +322,21 @@ const AssetsManagementPage: React.FC = () => {
   const handleEditFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      await investmentItemService.updateItem(editItem.id, { ...editItem, ...editForm });
+      // On n'envoie que les champs attendus par le backend
+      const payload = {
+        description: editForm.description,
+        supplier: editForm.supplier,
+        unitCost: editForm.unitCost,
+        shipping: editForm.shipping,
+        subTotal: editItem.subTotal ?? 0,
+        quantity: editForm.quantity,
+        total: editItem.total ?? 0,
+        coupaNumber: editItem.coupaNumber ?? '',
+        rytmNumber: editItem.rytmNumber ?? '',
+        ioNumber: editItem.ioNumber ?? '',
+        iyrasNumber: editItem.iyrasNumber ?? ''
+      };
+      await investmentItemService.updateItem(editItem.id, payload);
       toast.success('Item modifié !');
       setShowEditModal(false);
       setEditItem(null);
@@ -476,8 +497,8 @@ const AssetsManagementPage: React.FC = () => {
                         </td>
                         <td className="border px-2 py-1 space-x-2">
                           <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDetails(item)}>Details</button>
-                          <button className="bg-yellow-500 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemEdit(item)}>Edit</button>
-                          <button className="bg-red-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDelete(item)}>Delete</button>
+                          <button className="bg-yellow-500 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemEdit(item)} disabled={!canManageAssets}>Edit</button>
+                          <button className="bg-red-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDelete(item)} disabled={!canManageAssets}>Delete</button>
                           <button className="bg-purple-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleTracking(item)}>Suivi</button>
                         </td>
                       </tr>

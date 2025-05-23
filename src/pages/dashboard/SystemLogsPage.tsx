@@ -5,10 +5,20 @@ import { LOGS_URL } from '../../utils/globalConfig';
 import { toast } from 'react-hot-toast';
 import Spinner from '../../components/general/Spinner';
 import moment from 'moment';
+import useAuth from '../../hooks/useAuth.hook';
+import usePrivileges from '../../hooks/usePrivileges';
+import { Navigate } from 'react-router-dom';
+import { PATH_PUBLIC } from '../../routes/paths';
 
 const SystemLogsPage = () => {
   const [logs, setLogs] = useState<ILogDto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (!(isAdmin || privileges.includes('ManagePrivileges'))) {
+    return <Navigate to={PATH_PUBLIC.unauthorized} />;
+  }
 
   const getLogs = async () => {
     try {

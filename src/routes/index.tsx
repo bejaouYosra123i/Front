@@ -23,7 +23,58 @@ import AssetScrubPage from '../pages/dashboard/AssetScrubPage';
 import AddRequestPage from '../pages/dashboard/AddRequestPage';
 import PcRequestsListPage from '../pages/dashboard/PcRequestsListPage';
 import ProfilePage from '../pages/dashboard/ProfilePage';
+import PrivilegesAdminPage from '../pages/dashboard/PrivilegesAdminPage';
+import useAuth from '../hooks/useAuth.hook';
+import usePrivileges from '../hooks/usePrivileges';
+import UpdateProfilePage from '../pages/dashboard/UpdateProfilePage';
+import UpdatePasswordPage from '../pages/dashboard/UpdatePasswordPage';
 
+// Guards personnalisés
+const UsersManagementGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (isAdmin || privileges.includes('ManageUsers')) {
+    return <>{children}</>;
+  }
+  return <Navigate to={PATH_PUBLIC.unauthorized} />;
+};
+const SystemLogsGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (isAdmin || privileges.includes('ManagePrivileges')) {
+    return <>{children}</>;
+  }
+  return <Navigate to={PATH_PUBLIC.unauthorized} />;
+};
+const AllMessagesGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (isAdmin || privileges.includes('ManagePrivileges')) {
+    return <>{children}</>;
+  }
+  return <Navigate to={PATH_PUBLIC.unauthorized} />;
+};
+const AssetsManagementGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (isAdmin || privileges.includes('ManageAssets')) {
+    return <>{children}</>;
+  }
+  return <Navigate to={PATH_PUBLIC.unauthorized} />;
+};
+const PrivilegeGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  if (isAdmin || privileges.includes('ManagePrivileges')) {
+    return <>{children}</>;
+  }
+  return <Navigate to={PATH_PUBLIC.unauthorized} />;
+};
 
 const GlobalRouter = () => {
   return (
@@ -44,22 +95,23 @@ const GlobalRouter = () => {
           <Route path={PATH_DASHBOARD.myLogs} element={<MyLogsPage />} />
           <Route path={PATH_DASHBOARD.updateCredentials} element={<UpdateCredentialsPage/>}/>
           <Route path={PATH_DASHBOARD.investmentForms} element={<InvestmentFormsPage />} />
-          <Route path={PATH_DASHBOARD.assetsManagement} element={<AssetsManagementPage />} />
+          <Route path={PATH_DASHBOARD.assetsManagement} element={<AssetsManagementGuard><AssetsManagementPage /></AssetsManagementGuard>} />
           <Route path={PATH_DASHBOARD.addRequest} element={<AddRequestPage />} />
           <Route path="/dashboard/AssetScrubPage" element={<AssetScrubPage />} />
           <Route path={PATH_DASHBOARD.pcRequests} element={<PcRequestsListPage />} />
           <Route path={PATH_DASHBOARD.profile} element={<ProfilePage />} />
+          <Route path="/dashboard/update-profile" element={<UpdateProfilePage />} />
+          <Route path="/dashboard/update-password" element={<UpdatePasswordPage />} />
         </Route>
         <Route element={<AuthGuard roles={managerAccessRoles} />}>
           {/* <Route path={PATH_DASHBOARD.manager} element={<ManagerPage />} /> */}
         </Route>
-        <Route element={<AuthGuard roles={adminAccessRoles} />}>
-          <Route path={PATH_DASHBOARD.usersManagement} element={<UsersManagementPage />} />
-          <Route path={PATH_DASHBOARD.updateRole} element={<UpdateRolePage />} />
-          <Route path={PATH_DASHBOARD.allMessages} element={<AllMessagesPage />} />
-          <Route path={PATH_DASHBOARD.systemLogs} element={<SystemLogsPage />} />
-          <Route path={PATH_DASHBOARD.register} element={<RegisterPage />} />
-        </Route>
+        <Route path={PATH_DASHBOARD.usersManagement} element={<UsersManagementGuard><UsersManagementPage /></UsersManagementGuard>} />
+        <Route path={PATH_DASHBOARD.updateRole} element={<UsersManagementGuard><UpdateRolePage /></UsersManagementGuard>} />
+        <Route path={PATH_DASHBOARD.allMessages} element={<AllMessagesGuard><AllMessagesPage /></AllMessagesGuard>} />
+        <Route path={PATH_DASHBOARD.systemLogs} element={<SystemLogsGuard><SystemLogsPage /></SystemLogsGuard>} />
+        <Route path={PATH_DASHBOARD.register} element={<PrivilegeGuard><RegisterPage /></PrivilegeGuard>} />
+        <Route path={PATH_DASHBOARD.privileges} element={<PrivilegeGuard><PrivilegesAdminPage /></PrivilegeGuard>} />
         {/* Protected routes -------------------------------------------------- */}
 
         {/* Catch all (404) */}

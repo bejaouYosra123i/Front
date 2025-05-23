@@ -26,4 +26,5 @@ export const PATH_PUBLIC = {
     pcRequests: '/dashboard/pc-requests',
     profile: '/dashboard/profile',
     assetLifecycle: '/dashboard/asset-lifecycle',
+    privileges: '/dashboard/privileges',
   };

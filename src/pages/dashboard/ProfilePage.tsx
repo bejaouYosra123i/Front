@@ -33,13 +33,22 @@ const ProfilePage: React.FC = () => {
           <label className="block font-semibold mb-1">Rôle</label>
           <input type="text" value={user?.roles?.[0] || ''} disabled className="w-full border rounded px-3 py-2 bg-gray-100" />
         </div>
-        <button
-          type="button"
-          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded mt-6"
-          onClick={() => navigate(PATH_DASHBOARD.updateCredentials)}
-        >
-          Modifier mes informations
-        </button>
+        <div className="flex flex-col md:flex-row gap-4 mt-8">
+          <button
+            type="button"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+            onClick={() => navigate('/dashboard/update-profile')}
+          >
+            Modifier mes informations
+          </button>
+          <button
+            type="button"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded"
+            onClick={() => navigate('/dashboard/update-password')}
+          >
+            Modifier mon mot de passe
+          </button>
+        </div>
       </form>
     </div>
   );

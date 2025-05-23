@@ -10,6 +10,9 @@ import { toast } from 'react-hot-toast';
 import Spinner from '../../components/general/Spinner';
 import Button from '../../components/general/Button';
 import useAuth from '../../hooks/useAuth.hook';
+import usePrivileges from '../../hooks/usePrivileges';
+import { Navigate } from 'react-router-dom';
+import { PATH_PUBLIC } from '../../routes/paths';
 
 const UsersManagementPage = () => {
   const [users, setUsers] = useState<IAuthUser[]>([]);
@@ -19,6 +22,11 @@ const UsersManagementPage = () => {
   const [password, setPassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { user: currentUser } = useAuth();
+  const privileges = usePrivileges();
+  const isAdmin = currentUser?.roles?.includes('ADMIN');
+  if (!(isAdmin || privileges.includes('ManageUsers'))) {
+    return <Navigate to={PATH_PUBLIC.unauthorized} />;
+  }
 
   const getUsersList = async () => {
     try {
