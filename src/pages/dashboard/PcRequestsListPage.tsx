@@ -289,7 +289,7 @@ const PcRequestsListPage: React.FC = () => {
                       <div className="font-semibold mb-1">
                         Approvals ({Object.keys(req.approvals || {}).length}/{req.requiredApprovals})
                       </div>
-                      <ul className="text-xs">
+                    <ul className="text-xs">
                         {Object.entries(req.approvals || {}).map(([manager, status]) => (
                           <li key={manager} className="flex items-center gap-2">
                             <span className="font-medium">{manager}:</span>
@@ -299,8 +299,8 @@ const PcRequestsListPage: React.FC = () => {
                               {status}
                             </span>
                           </li>
-                        ))}
-                      </ul>
+                      ))}
+                    </ul>
                     </div>
                   </td>
                   <td className={`px-4 py-2 border font-bold ${req.status === 'Approved' ? 'text-green-600' : req.status === 'Rejected' ? 'text-red-600' : 'text-yellow-600'}`}>{req.status}</td>

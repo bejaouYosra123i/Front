@@ -21,6 +21,7 @@ import {
   REGISTER_URL,
   UPDATE_CREDENTIALS_URL,
 } from '../utils/globalConfig';
+import { PATH_PUBLIC } from '../routes/paths';
 
 // We need a reducer function for useReducer hook
 const authReducer = (state: IAuthContextState, action: IAuthContextAction) => {
@@ -137,8 +138,8 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
         address,
       });
       console.log('Register Result:', response);
-      toast.success('Register Was Successfull. Please Login.');
-      navigate(PATH_AFTER_REGISTER);
+      toast.success('User created successfully');
+      navigate('/dashboard/users-management'); // Redirection vers la page de gestion des utilisateurs
     },
     []
   );
@@ -202,8 +203,8 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user: undefined,
       privileges: [],
     });
-    navigate(PATH_AFTER_LOGOUT);
-  }, []);
+    navigate(PATH_PUBLIC.login);
+  }, [navigate]);
   
   // We create an object for values of context provider
   // This will keep our codes more readable

@@ -22,7 +22,7 @@ import AssetsManagementPage from '../pages/dashboard/AssetsManagementPage';
 import AssetScrubPage from '../pages/dashboard/AssetScrubPage';
 import AddRequestPage from '../pages/dashboard/AddRequestPage';
 import PcRequestsListPage from '../pages/dashboard/PcRequestsListPage';
-import ProfilePage from '../pages/dashboard/ProfilePage';
+import ProfileTabsPage from '../pages/dashboard/ProfileTabsPage';
 import PrivilegesAdminPage from '../pages/dashboard/PrivilegesAdminPage';
 import useAuth from '../hooks/useAuth.hook';
 import usePrivileges from '../hooks/usePrivileges';
@@ -99,7 +99,7 @@ const GlobalRouter = () => {
           <Route path={PATH_DASHBOARD.addRequest} element={<AddRequestPage />} />
           <Route path="/dashboard/AssetScrubPage" element={<AssetScrubPage />} />
           <Route path={PATH_DASHBOARD.pcRequests} element={<PcRequestsListPage />} />
-          <Route path={PATH_DASHBOARD.profile} element={<ProfilePage />} />
+          <Route path={PATH_DASHBOARD.profile} element={<ProfileTabsPage />} />
           <Route path="/dashboard/update-profile" element={<UpdateProfilePage />} />
           <Route path="/dashboard/update-password" element={<UpdatePasswordPage />} />
         </Route>

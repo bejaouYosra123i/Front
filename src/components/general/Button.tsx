@@ -2,7 +2,7 @@ interface IProps {
   variant: 'primary' | 'secondary' | 'danger' | 'light';
   type: 'submit' | 'button';
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   loading?: boolean;
   isAdmin?: boolean;
   disabled?: boolean;

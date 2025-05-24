@@ -49,87 +49,58 @@ const AddRequestForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="rounded-t-2xl p-8 bg-gradient-to-r from-yazaki-red to-yazaki-black flex items-center gap-3 shadow-lg">
+    <div className="w-full min-h-screen bg-white">
+      {/* Red banner with centered title and icon */}
+      <div className="bg-[#e53935] py-4 mb-10 flex items-center justify-center gap-3 rounded-t-2xl">
         <FiEdit2 className="text-white text-2xl" />
-        <h2 className="text-white text-2xl font-bold tracking-tight">New Equipment Request</h2>
+        <h2 className="text-white text-2xl md:text-3xl font-bold text-center">New Equipment Request</h2>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-white p-8 rounded-b-2xl shadow-xl border border-yazaki-gray">
-        <div>
-          <label className="block text-sm font-semibold mb-1 text-yazaki-black flex items-center gap-2">
-            <FiUser className="text-yazaki-red" /> Full Name
-          </label>
-          <input {...register('fullName', { required: true })} className="input w-full rounded-lg border border-yazaki-gray focus:border-yazaki-red focus:ring-yazaki-red/50 transition-all" placeholder="Enter your full name" />
-          {errors.fullName && <span className="text-yazaki-red text-xs">This field is required</span>}
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Full Name</label>
+            <input {...register('fullName', { required: true })} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" placeholder="Enter your full name" />
+            {errors.fullName && <span className="text-[#e53935] text-xs">This field is required</span>}
+      </div>
+      <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Department</label>
+            <input {...register('department', { required: true })} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" placeholder="e.g. IT, Finance, HR..." />
+            {errors.department && <span className="text-[#e53935] text-xs">This field is required</span>}
+      </div>
+      <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Position</label>
+            <input {...register('function', { required: true })} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" placeholder="Your position in the company" />
+            {errors.function && <span className="text-[#e53935] text-xs">This field is required</span>}
+      </div>
+      <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Equipment Type</label>
+            <div className="grid grid-cols-2 gap-4">
+              {pcTypeOptions.map(opt => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-gray-800">
+                  <input type="radio" value={opt.value} {...register('pcType', { required: true })} className="accent-[#e53935]" /> {opt.label}
+                </label>
+              ))}
+      </div>
+            {errors.pcType && <span className="text-[#e53935] text-xs">This field is required</span>}
         </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1 text-yazaki-black flex items-center gap-2">
-            <FiUsers className="text-yazaki-red" /> Department
-          </label>
-          <input {...register('department', { required: true })} className="input w-full rounded-lg border border-yazaki-gray focus:border-yazaki-red focus:ring-yazaki-red/50 transition-all" placeholder="e.g. IT, Finance, HR..." />
-          {errors.department && <span className="text-yazaki-red text-xs">This field is required</span>}
         </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1 text-yazaki-black flex items-center gap-2">
-            <FiBriefcase className="text-yazaki-red" /> Position
-          </label>
-          <input {...register('function', { required: true })} className="input w-full rounded-lg border border-yazaki-gray focus:border-yazaki-red focus:ring-yazaki-red/50 transition-all" placeholder="Your position in the company" />
-          {errors.function && <span className="text-yazaki-red text-xs">This field is required</span>}
-        </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1 text-yazaki-black flex items-center gap-2">
-            <FiMonitor className="text-yazaki-red" /> Equipment Type
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            {pcTypeOptions.map(opt => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-yazaki-black">
-                <input type="radio" value={opt.value} {...register('pcType', { required: true })} className="accent-yazaki-red" /> {opt.label}
-              </label>
-            ))}
-          </div>
-          {errors.pcType && <span className="text-yazaki-red text-xs">This field is required</span>}
-        </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1 text-yazaki-black flex items-center gap-2">
-            <FiEdit2 className="text-yazaki-red" /> Reason
-          </label>
-          <textarea {...register('reason', { required: true })} className="input w-full rounded-lg border-2 border-yazaki-gray focus:border-yazaki-red focus:ring-yazaki-red/50 transition-all min-h-[80px]" placeholder="Please specify the reason for this request..." />
-          <div className="text-xs text-yazaki-darkGray mt-1">Please provide a clear and detailed reason for your request. This helps us process it faster.</div>
-          {errors.reason && <span className="text-yazaki-red text-xs">This field is required</span>}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div className="border rounded-lg p-3 bg-yazaki-lightGray">
-            <div className="font-semibold text-yazaki-black">Manager:</div>
-            <div className="text-yellow-600">Pending</div>
-            <div className="text-xs text-yazaki-darkGray mt-2">Signature required</div>
-          </div>
-          <div className="border rounded-lg p-3 bg-yazaki-lightGray">
-            <div className="font-semibold text-yazaki-black">IT Manager:</div>
-            <div className="text-yellow-600">Pending</div>
-            <div className="text-xs text-yazaki-darkGray mt-2">Signature required</div>
-          </div>
-          <div className="border rounded-lg p-3 bg-yazaki-lightGray">
-            <div className="font-semibold text-yazaki-black">HR Manager:</div>
-            <div className="text-yellow-600">Pending</div>
-            <div className="text-xs text-yazaki-darkGray mt-2">Signature required</div>
-          </div>
-          <div className="border rounded-lg p-3 bg-yazaki-lightGray">
-            <div className="font-semibold text-yazaki-black">Plant Manager:</div>
-            <div className="text-yellow-600">Pending</div>
-            <div className="text-xs text-yazaki-darkGray mt-2">Signature required</div>
-          </div>
+        <div className="mb-4">
+          <label className="block text-base font-semibold mb-1 text-gray-800">Reason</label>
+          <textarea {...register('reason', { required: true })} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white min-h-[80px]" placeholder="Please specify the reason for this request..." />
+          <div className="text-xs text-gray-500 mt-1">Please provide a clear and detailed reason for your request. This helps us process it faster.</div>
+          {errors.reason && <span className="text-[#e53935] text-xs">This field is required</span>}
         </div>
         <div className="flex flex-col md:flex-row gap-4 mt-8">
-          <button type="submit" className="w-full md:w-auto px-8 py-3 rounded-lg bg-gradient-to-r from-yazaki-red to-yazaki-black text-white font-bold shadow-lg hover:from-yazaki-black hover:to-yazaki-red transition-all duration-200 text-lg" disabled={loading}>
+          <button type="submit" className="w-full md:w-auto px-8 py-3 rounded-lg bg-[#e53935] text-white font-bold shadow-lg hover:bg-[#b71c1c] transition-all duration-200 text-lg" disabled={loading}>
             {loading ? 'Sending...' : 'Submit'}
-          </button>
-          <button type="button" className="w-full md:w-auto px-8 py-3 rounded-lg bg-yazaki-gray text-yazaki-black font-bold shadow-lg hover:bg-yazaki-darkGray hover:text-white transition-all duration-200 text-lg" onClick={() => reset()} disabled={loading}>
+        </button>
+          <button type="button" className="w-full md:w-auto px-8 py-3 rounded-lg bg-gray-200 text-gray-800 font-bold shadow-lg hover:bg-gray-300 transition-all duration-200 text-lg" onClick={() => reset()} disabled={loading}>
             Cancel
-          </button>
-        </div>
+        </button>
+      </div>
         {success && <div className="text-green-600 mt-4">Request sent successfully!</div>}
-        {error && <div className="text-yazaki-red mt-4">{error}</div>}
-      </form>
+        {error && <div className="text-[#e53935] mt-4">{error}</div>}
+    </form>
     </div>
   );
 };

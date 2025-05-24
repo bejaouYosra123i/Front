@@ -59,6 +59,8 @@ const SendMessagePage = () => {
       const newMessage: ISendMessageDto = {
         receiverUserName: submittedData.receiverUserName,
         text: submittedData.text,
+        type: 'GENERAL',
+        status: 'NEW',
       };
       await axiosInstance.post(CREATE_MESSAGE_URL, newMessage);
       setLoading(false);
@@ -67,9 +69,10 @@ const SendMessagePage = () => {
     } catch (error) {
       setLoading(false);
       reset();
-      const err = error as { data: string; status: number };
-      if (err.status === 400) {
-        toast.error(err.data);
+      const err = error as any;
+      if (err?.status === 400) {
+        const msg = typeof err.data === 'string' ? err.data : err?.data?.message || 'An Error occurred. Please contact admins';
+        toast.error(msg);
       } else {
         toast.error('An Error occurred. Please contact admins');
       }

@@ -83,80 +83,71 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="max-w-4xl w-full mx-auto bg-gray-100 border-2 border-gray-600 rounded-xl flex flex-col lg:flex-row overflow-hidden">
-        {/* Left Section (Branding) */}
-        <div className="lg:flex-1 flex flex-col items-center justify-center p-8">
-          <img src="images/yazakiLog.png" alt="Yazaki Logo" className="w-40 h-14 object-contain mb-6" />
-          <h1 className="text-xl font-semibold text-gray-800 text-center">AssetSync</h1>
-          <p className="text-sm font-medium text-gray-600 text-center mt-2">Manage Your Assets with Ease</p>
-        </div>
-
-        {/* Right Section (Form) */}
-        <div className="lg:flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-xs mx-auto bg-white rounded-lg shadow-md p-6 flex flex-col gap-4">
-            <h1 className="text-lg font-semibold text-gray-800 text-center">Login</h1>
-            <form onSubmit={handleSubmit(onSubmitLoginForm)} className="flex flex-col gap-3">
-              <InputField
-                control={control}
-                label="User Name"
-                inputName="userName"
-                error={errors.userName?.message}
-              />
-              <InputField
-                control={control}
-                label="Password"
-                inputName="password"
-                inputType="password"
-                error={errors.password?.message}
-              />
-              <div className="flex justify-between gap-3 mt-4">
-                <Button
-                  variant="secondary"
-                  type="button"
-                  label="Reset"
-                  onClick={() => reset()}
-                  customClasses="bg-gray-500 hover:bg-gray-600 text-white rounded-full px-4 py-2 text-sm font-medium transition duration-200"
-                />
-                <Button
-                  variant="primary"
-                  type="submit"
-                  label="Login"
-                  loading={loading}
-                  customClasses="bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-2 text-sm font-medium transition duration-200"
-                />
-              </div>
-            </form>
-            <div className="mt-2 text-center">
-              <button
-                type="button"
-                className="text-blue-600 hover:underline text-sm"
-                onClick={() => setShowForgot(f => !f)}
-              >
-                Forgot password?
-              </button>
-            </div>
-            {showForgot && (
-              <div className="mt-4 flex flex-col gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Enter your email or username"
-                  value={forgotEmail}
-                  onChange={e => setForgotEmail(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
-                />
-                <button
-                  type="button"
-                  className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium hover:bg-blue-700 transition"
-                  onClick={handleForgotPassword}
-                  disabled={forgotLoading}
-                >
-                  {forgotLoading ? 'Sending...' : 'Send request to admin'}
-                </button>
-              </div>
-            )}
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl flex flex-col items-center p-8">
+        <img src="images/yazakiLog.png" alt="Yazaki Logo" className="w-32 h-12 object-contain mb-4" />
+        <h1 className="text-xl font-semibold text-gray-800 text-center">AssetSync</h1>
+        <p className="text-sm font-medium text-gray-600 text-center mb-6">Manage Your Assets with Ease</p>
+        <h1 className="text-lg font-semibold text-gray-800 text-center mb-4">Login</h1>
+        <form onSubmit={handleSubmit(onSubmitLoginForm)} className="flex flex-col gap-3 w-full">
+          <InputField
+            control={control}
+            label="User Name"
+            inputName="userName"
+            error={errors.userName?.message}
+          />
+          <InputField
+            control={control}
+            label="Password"
+            inputName="password"
+            inputType="password"
+            error={errors.password?.message}
+          />
+          <div className="flex justify-between gap-3 mt-4">
+            <Button
+              variant="secondary"
+              type="button"
+              label="Reset"
+              onClick={() => reset()}
+              customClasses="bg-gray-500 hover:bg-gray-600 text-white rounded-full px-4 py-2 text-sm font-medium transition duration-200"
+            />
+            <Button
+              variant="primary"
+              type="submit"
+              label="Login"
+              loading={loading}
+              customClasses="bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-2 text-sm font-medium transition duration-200"
+            />
           </div>
+        </form>
+        <div className="mt-2 text-center w-full">
+          <button
+            type="button"
+            className="text-blue-600 hover:underline text-sm"
+            onClick={() => setShowForgot(f => !f)}
+          >
+            Forgot password?
+          </button>
         </div>
+        {showForgot && (
+          <div className="mt-4 flex flex-col gap-2 items-center w-full">
+            <input
+              type="text"
+              placeholder="Enter your email or username"
+              value={forgotEmail}
+              onChange={e => setForgotEmail(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-2 w-full"
+            />
+            <button
+              type="button"
+              className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium hover:bg-blue-700 transition"
+              onClick={handleForgotPassword}
+              disabled={forgotLoading}
+            >
+              {forgotLoading ? 'Sending...' : 'Send request to admin'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

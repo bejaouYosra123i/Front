@@ -508,13 +508,46 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
   };
 
   return (
-    <div className="w-full min-h-screen bg-yazaki-lightGray px-0 py-0 flex flex-col">
-      <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-8 pt-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-yazaki-black tracking-tight">Create a New Investment Request</h1>
-        <button type="button" onClick={onCancel} className="bg-yazaki-gray text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow hover:bg-yazaki-darkGray hover:text-white transition-all duration-200">Back</button>
+    <div className="w-full min-h-screen bg-white">
+      {/* Red banner with centered title */}
+      <div className="bg-[#e53935] py-4 mb-10">
+        <h1 className="text-white text-2xl md:text-3xl font-bold text-center">IT Investment Form</h1>
       </div>
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 w-full mx-0">
-        <div className="mb-8 text-lg text-gray-700">Fill out the form below to submit a new investment request. All fields are required for fast processing.</div>
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Region</label>
+            <select name="region" value={form.region} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+              <option value="">Select a region</option>
+              <option value="Europe">Europe</option>
+              <option value="North America">North America</option>
+              <option value="Asia">Asia</option>
+              <option value="Africa">Africa</option>
+              <option value="South America">South America</option>
+              <option value="Middle East">Middle East</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Currency</label>
+            <select name="currency" value={form.currency} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+              <option value="">Select a currency</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CNY">CNY</option>
+              <option value="MAD">MAD</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Location</label>
+            <input name="location" value={form.location} onChange={handleChange} placeholder="Enter location" className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          </div>
+          <div>
+            <label className="block text-base font-semibold mb-1 text-gray-800">Request Date</label>
+            <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+          </div>
+        </div>
         <div className="flex flex-wrap gap-6 mb-8">
           <label className="flex items-center space-x-2 text-base cursor-pointer">
             <input
@@ -537,54 +570,12 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-800">Region</label>
-            <select name="region" value={form.region} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
-              <option value="">Select a region</option>
-              <option value="Europe">Europe</option>
-              <option value="North America">North America</option>
-              <option value="Asia">Asia</option>
-              <option value="Africa">Africa</option>
-              <option value="South America">South America</option>
-              <option value="Middle East">Middle East</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-800">Currency</label>
-            <select name="currency" value={form.currency} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
-              <option value="">Select a currency</option>
-              <option value="EUR">EUR</option>
-              <option value="USD">USD</option>
-              <option value="GBP">GBP</option>
-              <option value="JPY">JPY</option>
-              <option value="CNY">CNY</option>
-              <option value="MAD">MAD</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-800">Location</label>
-            <select name="location" value={form.location} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
-              <option value="">Select a location</option>
-              <option value="Paris">Paris</option>
-              <option value="Lyon">Lyon</option>
-              <option value="Berlin">Berlin</option>
-              <option value="New York">New York</option>
-              <option value="Casablanca">Casablanca</option>
-              <option value="Tokyo">Tokyo</option>
-              <option value="Shanghai">Shanghai</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div>
             <label className="block text-sm font-semibold mb-1 text-gray-800">Type of Investment</label>
             <select name="typeOfInvestment" value={form.typeOfInvestment} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required>
               <option value="">Select type</option>
               <option value="New">New</option>
               <option value="Refresh">Refresh</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-800">Req. Date</label>
-            <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white transition-all" required />
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1 text-gray-800">Due Date</label>

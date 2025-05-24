@@ -9,7 +9,7 @@ export interface IRegisterDto {
 
 
 export interface IUpdateCredentialsDto {
-  currentPassword: string;
+  currentPassword?: string;
   firstName?: string;
   lastName?: string;
   email?: string;

@@ -9,6 +9,7 @@ import useAuth from '../../hooks/useAuth.hook';
 import usePrivileges from '../../hooks/usePrivileges';
 import { Navigate } from 'react-router-dom';
 import { PATH_PUBLIC } from '../../routes/paths';
+import useResetPasswordNotif from '../../hooks/useResetPasswordNotif';
 
 const AllMessagesPage = () => {
   const [messages, setMessages] = useState<IMessageDto[]>([]);
@@ -16,6 +17,7 @@ const AllMessagesPage = () => {
   const { user } = useAuth();
   const privileges = usePrivileges();
   const isAdmin = user?.roles?.includes('ADMIN');
+  const { fetchNotif } = useResetPasswordNotif();
   if (!(isAdmin || privileges.includes('ManagePrivileges'))) {
     return <Navigate to={PATH_PUBLIC.unauthorized} />;
   }
@@ -45,6 +47,7 @@ const AllMessagesPage = () => {
       await axiosInstance.patch(`/Messages/${id}/mark-done`);
       toast.success('Request marked as done');
       getAllMessages();
+      fetchNotif();
     } catch (err) {
       toast.error('Error marking as done');
     }

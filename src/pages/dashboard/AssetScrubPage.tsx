@@ -109,13 +109,13 @@ const AssetScrubPage = () => {
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
     // Titre centré
-    doc.setFontSize(20);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('Asset Scrap Request Report', doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+    doc.text('Asset Scrap Request Report', doc.internal.pageSize.getWidth() / 2, 48, { align: 'center' });
     // Date en dessous
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 70, { align: 'center' });
     // Tableau principal
     autoTable(doc, {
       head: [[
@@ -142,29 +142,30 @@ const AssetScrubPage = () => {
         asset.assetOwner,
         asset.dataInputDate ? asset.dataInputDate.slice(0, 10) : ''
       ]),
-      startY: 80,
+      startY: 90,
       theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 4 },
-      headStyles: { fillColor: [255, 193, 7], textColor: 20, fontStyle: 'bold', halign: 'center', valign: 'middle' },
-      bodyStyles: { valign: 'middle' },
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, overflow: 'linebreak' },
+      headStyles: { fillColor: [255, 193, 7], textColor: 20, fontStyle: 'bold', halign: 'center', valign: 'middle', font: 'helvetica', fontSize: 11 },
+      bodyStyles: { valign: 'middle', font: 'helvetica', fontSize: 10 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
       columnStyles: {
-        0: { minCellWidth: 60 },
-        1: { minCellWidth: 60 },
-        2: { minCellWidth: 80 },
-        3: { minCellWidth: 60 },
-        4: { minCellWidth: 80 },
-        5: { minCellWidth: 50 },
-        6: { minCellWidth: 80 },
-        7: { minCellWidth: 70 },
-        8: { minCellWidth: 100 },
-        9: { minCellWidth: 80 },
-        10: { minCellWidth: 70 },
-        11: { minCellWidth: 80 },
-        12: { minCellWidth: 80 },
-        13: { minCellWidth: 80 },
-        14: { minCellWidth: 80 },
-        15: { minCellWidth: 80 },
-        16: { minCellWidth: 120 }
+        0: { cellWidth: 60 }, // Company Code
+        1: { cellWidth: 60 }, // Plant Code
+        2: { cellWidth: 90 }, // Asset Number
+        3: { cellWidth: 60 }, // Sub Number
+        4: { cellWidth: 90 }, // Serial Number
+        5: { cellWidth: 50, halign: 'right' }, // Quantity
+        6: { cellWidth: 90 }, // Total/Partial retirement
+        7: { cellWidth: 70 }, // Cost Center
+        8: { cellWidth: 120 }, // Description
+        9: { cellWidth: 90 }, // Location
+        10: { cellWidth: 80 }, // Acquisition Date
+        11: { cellWidth: 90, halign: 'right' }, // Acquisition Amount Euro
+        12: { cellWidth: 90, halign: 'right' }, // Acquisition Amount Local
+        13: { cellWidth: 90, halign: 'right' }, // Net Book Value Euro
+        14: { cellWidth: 90, halign: 'right' }, // Net Book Value Local
+        15: { cellWidth: 80 }, // Asset Owner
+        16: { cellWidth: 150, halign: 'center' }, // Data Input Date
       },
       didDrawPage: (data) => {
         // Optionnel : ajouter un pied de page ou logo ici
@@ -174,21 +175,21 @@ const AssetScrubPage = () => {
     const approvalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 40 : 200;
     autoTable(doc, {
       body: [[
-        { content: 'Asset Owner manager', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
-        { content: 'Local Finance Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
-        { content: 'Plant Manager Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } },
-        { content: 'Bernhard Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] } }
+        { content: 'Asset Owner manager', styles: { halign: 'center', fontSize: 14, cellPadding: 18, lineWidth: 1, lineColor: [180,180,180], fontStyle: 'bold', font: 'helvetica' } },
+        { content: 'Local Finance Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 18, lineWidth: 1, lineColor: [180,180,180], fontStyle: 'bold', font: 'helvetica' } },
+        { content: 'Plant Manager Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 18, lineWidth: 1, lineColor: [180,180,180], fontStyle: 'bold', font: 'helvetica' } },
+        { content: 'Bernhard Approval', styles: { halign: 'center', fontSize: 14, cellPadding: 18, lineWidth: 1, lineColor: [180,180,180], fontStyle: 'bold', font: 'helvetica' } }
       ]],
       startY: approvalY,
       theme: 'plain',
-      styles: { fontSize: 14, halign: 'center', valign: 'middle', cellPadding: 16, lineWidth: 1, lineColor: [180,180,180] },
+      styles: { font: 'helvetica', fontSize: 14, halign: 'center', valign: 'middle', cellPadding: 18, lineWidth: 1, lineColor: [180,180,180] },
       tableLineWidth: 1,
       tableLineColor: [180, 180, 180],
       columnStyles: {
-        0: { cellWidth: 180 },
-        1: { cellWidth: 180 },
-        2: { cellWidth: 180 },
-        3: { cellWidth: 180 }
+        0: { cellWidth: 200 },
+        1: { cellWidth: 200 },
+        2: { cellWidth: 200 },
+        3: { cellWidth: 200 }
       }
     });
     doc.save('asset-scrap-report.pdf');

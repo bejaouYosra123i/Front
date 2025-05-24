@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PATH_DASHBOARD } from '../../routes/paths';
 import useAuth from '../../hooks/useAuth.hook';
 import usePrivileges from '../../hooks/usePrivileges';
+import useResetPasswordNotif from '../../hooks/useResetPasswordNotif';
 import { 
   FiUsers, 
   FiMessageSquare, 
@@ -25,6 +26,7 @@ import {
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -69,11 +71,26 @@ const NavItem = ({ icon, label, to, isAdminOnly = false, isCollapsed, show }: Na
 };
 
 const Sidebar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
+  const { count: resetNotif, prevCount: prevResetNotif } = useResetPasswordNotif();
+
+  // Toast notification for new reset password request (fix: useEffect)
+  useEffect(() => {
+    if (resetNotif > prevResetNotif) {
+      toast.dismiss('reset-request');
+      toast('Someone wants to reset their password.', {
+        id: 'reset-request',
+        icon: '🔔',
+        duration: 5000, // 5 seconds
+        style: { background: '#fff', color: '#e60012', fontWeight: 'bold', fontSize: '1rem' },
+        position: 'top-right',
+      });
+    }
+  }, [resetNotif, prevResetNotif]);
 
   const isAdmin = user?.roles?.includes('ADMIN');
   const privileges = usePrivileges();
@@ -98,7 +115,16 @@ const Sidebar = () => {
       icon: <FiMessageSquare />,
       items: [
         { icon: <FiMail />, label: 'Send Message', to: PATH_DASHBOARD.sendMessage, adminOnly: false },
-        { icon: <FiInbox />, label: 'Inbox', to: PATH_DASHBOARD.inbox, adminOnly: false },
+        { icon: (
+            <span className="relative">
+              <FiInbox />
+              {resetNotif > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-1.5 py-0.5 text-xs font-bold animate-pulse">
+                  {resetNotif}
+                </span>
+              )}
+            </span>
+          ), label: 'Inbox', to: PATH_DASHBOARD.inbox, adminOnly: false },
         { icon: <FiMail />, label: 'All Messages', to: PATH_DASHBOARD.allMessages, adminOnly: true },
       ]
     },
@@ -181,14 +207,22 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer with Logout */}
       {!isCollapsed && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 border-t border-yazaki-darkGray text-center text-xs text-yazaki-gray"
+          className="p-4 border-t border-yazaki-darkGray text-center text-xs text-yazaki-gray flex flex-col gap-4"
         >
-          © {new Date().getFullYear()} Asset Management System
+          <button
+            onClick={logout}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-all duration-200 text-base shadow"
+        >
+            Logout
+          </button>
+          <div className="text-xs text-yazaki-gray mt-2">
+            © {new Date().getFullYear()} Asset Management System
+          </div>
         </motion.div>
       )}
     </motion.div>

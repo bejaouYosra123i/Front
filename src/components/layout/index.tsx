@@ -22,9 +22,11 @@ const Layout = () => {
       <Header />
 
       {/* Using Outlet, We render all routes that are inside of this Layout */}
-      <div className='flex'>
+      <div className='flex h-screen w-screen'>
         {sideBarRenderer()}
-        <Outlet />
+        <div className='flex-1 h-full w-full overflow-auto'>
+          <Outlet />
+        </div>
       </div>
     </div>
   );

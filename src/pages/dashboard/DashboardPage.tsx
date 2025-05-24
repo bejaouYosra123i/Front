@@ -3,6 +3,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth.hook';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 interface Asset {
   id: number;
@@ -26,6 +27,7 @@ const DashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [chartData, setChartData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAssets();
@@ -151,6 +153,47 @@ const DashboardPage: React.FC = () => {
 
   // Ajout d'une variable pour vérifier si l'utilisateur est admin
   const isAdmin = user?.roles?.includes('ADMIN');
+
+  // --- IA Smart Notifications via backend API ---
+  useEffect(() => {
+    const fetchSmartNotifications = async () => {
+      try {
+        const res = await axiosInstance.get('/notifications');
+        if (Array.isArray(res.data)) {
+          // Trier par importance (urgent > normal > info)
+          const order: Record<string, number> = { urgent: 0, normal: 1, info: 2 };
+          const notifications: Array<any> = res.data.sort((a: any, b: any) => order[a.importance] - order[b.importance]);
+          notifications.forEach((notif: any) => {
+            const toastId = toast(notif.message, {
+              icon: notif.type === 'profile' ? '⚠️' : notif.type === 'message' ? '📩' : '📝',
+              duration: 7000,
+              style: {
+                background: notif.type === 'profile' ? '#fffbe6' : notif.type === 'message' ? '#e0f2fe' : '#fef3c7',
+                color: notif.type === 'profile' ? '#b45309' : notif.type === 'message' ? '#0369a1' : '#92400e',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                cursor: notif.link ? 'pointer' : undefined,
+              },
+              position: 'top-right',
+              id: notif.id,
+            });
+            // Ajout navigation au clic sur le toast
+            if (notif.link) {
+              setTimeout(() => {
+                const toastElem = document.querySelector(`[data-id="${toastId}"]`);
+                if (toastElem) {
+                  toastElem.addEventListener('click', () => navigate(notif.link));
+                }
+              }, 100);
+            }
+          });
+        }
+      } catch (err) {
+        // Optionnel : toast d'erreur si l'API notifications échoue
+      }
+    };
+    fetchSmartNotifications();
+  }, [user, navigate]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
