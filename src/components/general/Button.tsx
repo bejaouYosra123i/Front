@@ -1,7 +1,9 @@
+import React from 'react';
+
 interface IProps {
   variant: 'primary' | 'secondary' | 'danger' | 'light';
   type: 'submit' | 'button';
-  label: string;
+  label: React.ReactNode;
   onClick?: () => void;
   loading?: boolean;
   isAdmin?: boolean;

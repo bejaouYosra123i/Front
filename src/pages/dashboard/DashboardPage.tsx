@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth.hook';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { useSmartNotifications } from '../../hooks/useSmartNotifications';
+import { FiAlertTriangle, FiInfo, FiBell, FiTrash2, FiRefreshCw, FiTool } from 'react-icons/fi';
 
 interface Asset {
   id: number;
@@ -27,7 +28,10 @@ const DashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [chartData, setChartData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const navigate = useNavigate();
+  const notifications = useSmartNotifications();
+  const [visibleNotifications, setVisibleNotifications] = useState<any[]>([]);
+  const [disappearing, setDisappearing] = useState<string[]>([]);
+  const timers = useRef<{[key:number]: NodeJS.Timeout}>({});
 
   useEffect(() => {
     fetchAssets();
@@ -154,46 +158,32 @@ const DashboardPage: React.FC = () => {
   // Ajout d'une variable pour vérifier si l'utilisateur est admin
   const isAdmin = user?.roles?.includes('ADMIN');
 
-  // --- IA Smart Notifications via backend API ---
+  // Affichage toast uniforme pour toutes les notifications
   useEffect(() => {
-    const fetchSmartNotifications = async () => {
-      try {
-        const res = await axiosInstance.get('/notifications');
-        if (Array.isArray(res.data)) {
-          // Trier par importance (urgent > normal > info)
-          const order: Record<string, number> = { urgent: 0, normal: 1, info: 2 };
-          const notifications: Array<any> = res.data.sort((a: any, b: any) => order[a.importance] - order[b.importance]);
-          notifications.forEach((notif: any) => {
-            const toastId = toast(notif.message, {
-              icon: notif.type === 'profile' ? '⚠️' : notif.type === 'message' ? '📩' : '📝',
-              duration: 7000,
-              style: {
-                background: notif.type === 'profile' ? '#fffbe6' : notif.type === 'message' ? '#e0f2fe' : '#fef3c7',
-                color: notif.type === 'profile' ? '#b45309' : notif.type === 'message' ? '#0369a1' : '#92400e',
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                cursor: notif.link ? 'pointer' : undefined,
-              },
-              position: 'top-right',
-              id: notif.id,
-            });
-            // Ajout navigation au clic sur le toast
-            if (notif.link) {
-              setTimeout(() => {
-                const toastElem = document.querySelector(`[data-id="${toastId}"]`);
-                if (toastElem) {
-                  toastElem.addEventListener('click', () => navigate(notif.link));
-                }
-              }, 100);
-            }
-          });
-        }
-      } catch (err) {
-        // Optionnel : toast d'erreur si l'API notifications échoue
-      }
-    };
-    fetchSmartNotifications();
-  }, [user, navigate]);
+    notifications.forEach((notif) => {
+      const toastId = `notif-${notif.type}-${notif.text}`;
+      toast.dismiss(toastId); // éviter les doublons
+      toast(notif.text, {
+        id: toastId,
+        icon: notif.type === 'urgent' ? '🔔' : notif.type === 'warning' ? '⚠️' : 'ℹ️',
+        duration: 5000,
+        style: {
+          background: '#fff',
+          color: notif.type === 'urgent'
+            ? '#e60012'
+            : notif.type === 'warning'
+            ? '#e6a800'
+            : '#1976d2',
+          fontWeight: 'bold',
+          fontSize: '1rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 24px 0 rgba(0,0,0,0.10)',
+          padding: '16px 24px',
+        },
+        position: 'top-right',
+      });
+    });
+  }, [notifications]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -276,85 +266,90 @@ const DashboardPage: React.FC = () => {
 
       {/* Assets Table */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Asset Number
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assigned To
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Location
-              </th>
-              {isAdmin && (
+        <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Asset Number
                 </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {searchedAssets.map((asset) => (
-              <tr key={asset.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {asset.serialNumber}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {asset.description}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {asset.category}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(asset.status)}`}> 
-                    {asset.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {asset.assignedTo}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {asset.location}
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Assigned To
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
                 {isAdmin && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => updateAssetStatus(asset.id, 'In Maintenance')}
-                        className="text-yellow-600 hover:text-yellow-900"
-                      >
-                        Maintenance
-                      </button>
-                      <button
-                        onClick={() => updateAssetStatus(asset.id, 'Replaced')}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Replace
-                      </button>
-                      <button
-                        onClick={() => updateAssetStatus(asset.id, 'Scrap')}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Scrap
-                      </button>
-                    </div>
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {searchedAssets.map((asset) => (
+                <tr key={asset.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {asset.serialNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {asset.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {asset.category}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(asset.status)}`}> 
+                      {asset.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {asset.assignedTo}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {asset.location}
+                  </td>
+                  {isAdmin && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-3 justify-center">
+                        <button
+                          onClick={() => updateAssetStatus(asset.id, 'In Maintenance')}
+                          className="text-yellow-600 hover:text-yellow-900 text-xl"
+                          title="Set to Maintenance"
+                        >
+                          <FiTool />
+                        </button>
+                        <button
+                          onClick={() => updateAssetStatus(asset.id, 'Replaced')}
+                          className="text-blue-600 hover:text-blue-900 text-xl"
+                          title="Set to Replaced"
+                        >
+                          <FiRefreshCw />
+                        </button>
+                        <button
+                          onClick={() => updateAssetStatus(asset.id, 'Scrap')}
+                          className="text-red-600 hover:text-red-900 text-xl"
+                          title="Set to Scrap"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {loading && (

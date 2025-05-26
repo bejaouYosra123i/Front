@@ -83,7 +83,7 @@ const GlobalRouter = () => {
       <Route element={<Layout />}>
         
         {/* Public routes */}
-        <Route index element={<HomePage />} />
+        <Route index element={<Navigate to={PATH_PUBLIC.login} replace />} />
         <Route path={PATH_PUBLIC.login} element={<LoginPage />} />
         <Route path={PATH_PUBLIC.unauthorized} element={<UnauthorizedPage />} />
 

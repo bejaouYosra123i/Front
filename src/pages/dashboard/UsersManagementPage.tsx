@@ -13,6 +13,7 @@ import useAuth from '../../hooks/useAuth.hook';
 import usePrivileges from '../../hooks/usePrivileges';
 import { Navigate } from 'react-router-dom';
 import { PATH_PUBLIC } from '../../routes/paths';
+import { FiTrash2, FiX } from 'react-icons/fi';
 
 const UsersManagementPage = () => {
   const [users, setUsers] = useState<IAuthUser[]>([]);
@@ -109,7 +110,7 @@ const UsersManagementPage = () => {
             />
             <div className="flex justify-end space-x-4">
               <Button
-                label="Annuler"
+                label={<span className="flex items-center gap-2"><FiX /> Annuler</span>}
                 onClick={() => {
                   setShowDeleteModal(false);
                   setPassword('');
@@ -120,7 +121,7 @@ const UsersManagementPage = () => {
                 disabled={deleteLoading}
               />
               <Button
-                label={deleteLoading ? "Suppression..." : "Supprimer"}
+                label={<span className="flex items-center gap-2"><FiTrash2 /> {deleteLoading ? "Suppression..." : "Supprimer"}</span>}
                 onClick={handleDelete}
                 type="button"
                 variant="danger"

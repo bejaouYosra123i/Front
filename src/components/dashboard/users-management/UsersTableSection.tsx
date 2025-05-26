@@ -9,6 +9,7 @@ import axiosInstance from '../../../utils/axiosInstance';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
 import { ClipboardIcon } from '@heroicons/react/24/outline';
+import { FiEdit2, FiKey, FiTrash2 } from 'react-icons/fi';
 
 interface IProps {
   usersList: IAuthUser[];
@@ -113,7 +114,7 @@ const UsersTableSection = ({ usersList, onDeleteClick }: IProps) => {
             </div>
             <div className='flex items-center justify-center'>
               <Button
-                label='Update Role'
+                label={<span className="flex items-center gap-2"><FiEdit2 /> Update</span>}
                 onClick={() => navigate(`/dashboard/update-role/${user.userName}`)}
                 type='button'
                 variant='primary'
@@ -123,7 +124,7 @@ const UsersTableSection = ({ usersList, onDeleteClick }: IProps) => {
             </div>
             <div className='flex items-center justify-center'>
               <Button
-                label={resetLoading && resetUser === user.userName ? 'Resetting...' : 'Reset password'}
+                label={<span className="flex items-center gap-2"><FiKey />{resetLoading && resetUser === user.userName ? 'Resetting...' : 'Reset'}</span>}
                 onClick={() => handleResetPassword(user.userName)}
                 type='button'
                 variant='danger'
@@ -133,7 +134,7 @@ const UsersTableSection = ({ usersList, onDeleteClick }: IProps) => {
             </div>
             <div className='flex items-center justify-center'>
               <Button
-                label='Delete'
+                label={<span className="flex items-center gap-2"><FiTrash2 /> Delete</span>}
                 onClick={() => onDeleteClick(user)}
                 type='button'
                 variant='danger'

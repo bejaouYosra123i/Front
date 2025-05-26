@@ -77,10 +77,12 @@ const Sidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
   const { count: resetNotif, prevCount: prevResetNotif } = useResetPasswordNotif();
+  const [hasShownResetNotif, setHasShownResetNotif] = useState(false);
 
   // Toast notification for new reset password request (fix: useEffect)
   useEffect(() => {
-    if (resetNotif > prevResetNotif) {
+    const alreadySeen = localStorage.getItem('resetNotifSeen') === '1';
+    if (resetNotif > prevResetNotif && !alreadySeen) {
       toast.dismiss('reset-request');
       toast('Someone wants to reset their password.', {
         id: 'reset-request',
@@ -89,6 +91,8 @@ const Sidebar = () => {
         style: { background: '#fff', color: '#e60012', fontWeight: 'bold', fontSize: '1rem' },
         position: 'top-right',
       });
+      localStorage.setItem('resetNotifSeen', '1');
+      setHasShownResetNotif(true);
     }
   }, [resetNotif, prevResetNotif]);
 
@@ -102,7 +106,7 @@ const Sidebar = () => {
       group: 'main',
       items: [
         { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly: false },
-        { icon: <FiLayers />, label: 'Asset Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
+        { icon: <FiLayers />, label: 'Investment Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
         { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
         { icon: <FiPlusCircle />, label: 'New Request', to: PATH_DASHBOARD.addRequest, adminOnly: false },
         { icon: <FiList />, label: 'Asset List', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
@@ -135,7 +139,6 @@ const Sidebar = () => {
       items: [
         { icon: <FiUsers />, label: 'User Management', to: PATH_DASHBOARD.usersManagement, adminOnly: false, show: canManageUsers },
         { icon: <FiActivity />, label: 'System Logs', to: PATH_DASHBOARD.systemLogs, adminOnly: true },
-        { icon: <FiShield />, label: 'Privileges', to: PATH_DASHBOARD.privileges, adminOnly: false, show: canManagePrivileges },
         { icon: <FiActivity />, label: 'My Logs', to: PATH_DASHBOARD.myLogs, adminOnly: false },
         { icon: <FiRefreshCw style={{ color: '#ED1C24' }} />, label: 'Asset Scrap', to: '/dashboard/AssetScrubPage', adminOnly: true },
       ]

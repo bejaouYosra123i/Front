@@ -1,5 +1,4 @@
 import useAuth from '../../hooks/useAuth.hook';
-import Header from './Header';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
@@ -19,8 +18,7 @@ const Layout = () => {
 
   return (
     <div>
-      <Header />
-
+      {/* <Header /> */}
       {/* Using Outlet, We render all routes that are inside of this Layout */}
       <div className='flex h-screen w-screen'>
         {sideBarRenderer()}

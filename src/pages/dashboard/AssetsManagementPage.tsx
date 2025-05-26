@@ -11,6 +11,7 @@ import TrackingModal from './TrackingModal';
 import usePrivileges from '../../hooks/usePrivileges';
 import { Navigate } from 'react-router-dom';
 import { PATH_PUBLIC } from '../../routes/paths';
+import { FiTrash2, FiEye, FiInfo } from 'react-icons/fi';
 
 interface InvestmentFormData {
   id?: number;
@@ -316,7 +317,11 @@ const AssetsManagementPage: React.FC = () => {
 
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
-    setEditForm(f => ({ ...f, [name]: name === 'unitCost' || name === 'quantity' || name === 'shipping' ? Number(value) : value }));
+    let newValue = value;
+    if (["unitCost", "shipping", "quantity"].includes(name)) {
+      newValue = value.replace(',', '.');
+    }
+    setEditForm(f => ({ ...f, [name]: name === 'unitCost' || name === 'quantity' || name === 'shipping' ? Number(newValue) : newValue }));
   };
 
   const handleEditFormSubmit = async (e) => {
@@ -324,6 +329,7 @@ const AssetsManagementPage: React.FC = () => {
     try {
       // On n'envoie que les champs attendus par le backend
       const payload = {
+        id: itemId,
         description: editForm.description,
         supplier: editForm.supplier,
         unitCost: editForm.unitCost,
@@ -331,12 +337,17 @@ const AssetsManagementPage: React.FC = () => {
         subTotal: editItem.subTotal ?? 0,
         quantity: editForm.quantity,
         total: editItem.total ?? 0,
+        investmentFormId: editItem.investmentFormId,
         coupaNumber: editItem.coupaNumber ?? '',
         rytmNumber: editItem.rytmNumber ?? '',
         ioNumber: editItem.ioNumber ?? '',
-        iyrasNumber: editItem.iyrasNumber ?? ''
+        iyrasNumber: editItem.iyrasNumber ?? '',
+        status: editItem.status ?? 'Pending',
       };
-      await investmentItemService.updateItem(editItem.id, payload);
+      const itemId = Number(editItem.id);
+      console.log('URL appelée:', `/InvestmentItem/${itemId}`);
+      console.log('Payload envoyé pour updateItem:', JSON.stringify(payload, null, 2));
+      await investmentItemService.updateItem(itemId, payload);
       toast.success('Item modifié !');
       setShowEditModal(false);
       setEditItem(null);
@@ -457,55 +468,64 @@ const AssetsManagementPage: React.FC = () => {
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full border">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border px-2 py-1">Item ID</th>
-                    <th className="border px-2 py-1">Form ID</th>
-                    <th className="border px-2 py-1">Description</th>
-                    <th className="border px-2 py-1">Supplier</th>
-                    <th className="border px-2 py-1">Unit Cost</th>
-                    <th className="border px-2 py-1">Quantity</th>
-                    <th className="border px-2 py-1">Region</th>
-                    <th className="border px-2 py-1">Status</th>
-                    <th className="border px-2 py-1">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allItems.map(item => {
-                    console.log('Item affiché dans le tableau:', item); // Debug
-                    return (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="border px-2 py-1">{item.id}</td>
-                        <td className="border px-2 py-1">{item.formId}</td>
-                        <td className="border px-2 py-1">{item.description}</td>
-                        <td className="border px-2 py-1">{item.supplier}</td>
-                        <td className="border px-2 py-1">{item.unitCost}</td>
-                        <td className="border px-2 py-1">{item.quantity}</td>
-                        <td className="border px-2 py-1">{item.region}</td>
-                        <td className="border px-2 py-1">
-                          {item.status && (
-                            <span className={
-                              item.status === 'Approved' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold' :
-                              item.status === 'Rejected' ? 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold' :
-                              item.status === 'Under-approval' ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold' :
-                              'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold'
-                            }>
-                              {item.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="border px-2 py-1 space-x-2">
-                          <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDetails(item)}>Details</button>
-                          <button className="bg-yellow-500 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemEdit(item)} disabled={!canManageAssets}>Edit</button>
-                          <button className="bg-red-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleItemDelete(item)} disabled={!canManageAssets}>Delete</button>
-                          <button className="bg-purple-600 text-white px-3 py-1 rounded text-sm" onClick={() => handleTracking(item)}>Suivi</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+                <table className="min-w-full border">
+                  <thead className="sticky top-0 bg-gray-100 z-10">
+                    <tr className="bg-gray-100">
+                      <th className="border px-2 py-1">Item ID</th>
+                      <th className="border px-2 py-1">Form ID</th>
+                      <th className="border px-2 py-1">Description</th>
+                      <th className="border px-2 py-1">Supplier</th>
+                      <th className="border px-2 py-1">Unit Cost</th>
+                      <th className="border px-2 py-1">Quantity</th>
+                      <th className="border px-2 py-1">Region</th>
+                      <th className="border px-2 py-1">Status</th>
+                      <th className="border px-2 py-1">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allItems.map(item => {
+                      console.log('Item affiché dans le tableau:', item); // Debug
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="border px-2 py-1">{item.id}</td>
+                          <td className="border px-2 py-1">{item.formId}</td>
+                          <td className="border px-2 py-1">{item.description}</td>
+                          <td className="border px-2 py-1">{item.supplier}</td>
+                          <td className="border px-2 py-1">{item.unitCost}</td>
+                          <td className="border px-2 py-1">{item.quantity}</td>
+                          <td className="border px-2 py-1">{item.region}</td>
+                          <td className="border px-2 py-1">
+                            {item.status && (
+                              <span className={
+                                item.status === 'Approved' ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold' :
+                                item.status === 'Rejected' ? 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold' :
+                                item.status === 'Under-approval' ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold' :
+                                'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold'
+                              }>
+                                {item.status}
+                              </span>
+                            )}
+                          </td>
+                          <td className="border px-2 py-1">
+                            <div className="flex flex-row items-center gap-2 justify-center">
+                              <button title="Details" className="text-blue-600 hover:text-blue-800 text-xl" onClick={() => handleItemDetails(item)}>
+                                <FiInfo />
+                              </button>
+                              <button title="Delete" className="text-red-600 hover:text-red-800 text-xl" onClick={() => handleItemDelete(item)} disabled={!canManageAssets}>
+                                <FiTrash2 />
+                              </button>
+                              <button title="Tracking" className="text-purple-600 hover:text-purple-800 text-xl" onClick={() => handleTracking(item)}>
+                                <FiEye />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           {/* Details modal */}

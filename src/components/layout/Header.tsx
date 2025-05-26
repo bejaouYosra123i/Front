@@ -22,13 +22,25 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Header is intentionally left blank for a minimal look */}
           <div></div>
-          {/* Right section: show Login button if not authenticated */}
+          {/* Right section: show Login or Logout button */}
           {!isAuthenticated && (
             <Button
               label="Login"
               onClick={() => navigate(PATH_PUBLIC.login)}
               type="button"
               variant="primary"
+            />
+          )}
+          {isAuthenticated && (
+            <Button
+              label="Logout"
+              onClick={() => {
+                logout();
+                navigate(PATH_PUBLIC.login);
+              }}
+              type="button"
+              variant="secondary"
+              className="ml-4"
             />
           )}
         </div>

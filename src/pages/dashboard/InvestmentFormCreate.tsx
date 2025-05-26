@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth.hook';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { FiTrash2, FiPlus, FiDownload, FiX } from 'react-icons/fi';
 
 interface InvestmentItem {
   id?: number;
@@ -510,7 +511,7 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
   return (
     <div className="w-full min-h-screen bg-white">
       {/* Red banner with centered title */}
-      <div className="bg-[#e53935] py-4 mb-10">
+      <div className="bg-[#e60012] py-4 mb-10">
         <h1 className="text-white text-2xl md:text-3xl font-bold text-center">IT Investment Form</h1>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 max-w-6xl mx-auto">
@@ -625,27 +626,27 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
                 <td className="border border-gray-200 px-2 py-1"><input name="subTotal" value={item.subTotal.toFixed(2)} readOnly className="w-full border border-gray-300 rounded-md px-2 py-1 bg-gray-200 text-yazaki-black" placeholder="SubTotal" /></td>
                 <td className="border border-gray-200 px-2 py-1"><input name="total" value={item.total.toFixed(2)} readOnly className="w-full border border-gray-300 rounded-md px-2 py-1 bg-gray-200 text-yazaki-black" placeholder="Total" /></td>
                 <td className="border border-gray-200 px-2 py-1 text-center">
-                  <button type="button" className="text-yazaki-red underline font-medium" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>Delete</button>
+                  <button type="button" className="text-blue-600 hover:text-blue-800 text-xl" onClick={() => removeItem(idx)} disabled={form.items.length === 1} title="Delete item">
+                    <FiTrash2 />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <button type="button" className="bg-yazaki-red text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-yazaki-black transition" onClick={addItem}>Add Item</button>
+        <button type="button" className="bg-[#e60012] text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-[#c62828] transition flex items-center gap-2" onClick={addItem}>
+          <FiPlus /> Add Item
+        </button>
         <div className="flex space-x-2 mt-4">
-          <button type="submit" className="bg-yazaki-red text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-black transition" disabled={loading}>
+          <button type="submit" className="bg-[#e60012] text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#c62828] transition flex items-center gap-2" disabled={loading}>
             {loading ? (isEdit ? 'Updating…' : 'Sending…') : (isEdit ? 'Update Form' : 'Create Form')}
           </button>
-          <button
-            type="button"
-            className="bg-yazaki-gray text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-darkGray hover:text-white transition"
-            onClick={() => exportFormToExcelPro(form)}
-          >
-            Download Excel
+          <button type="button" className="bg-gray-200 text-blue-700 px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#fbeaec] hover:text-[#e60012] transition flex items-center gap-2" onClick={() => exportFormToExcelPro(form)}>
+            <FiDownload /> Download Excel
           </button>
           {onCancel && (
-            <button type="button" className="bg-gray-300 text-yazaki-black px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-400 transition" onClick={onCancel} disabled={loading}>
-              Cancel
+            <button type="button" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-400 transition flex items-center gap-2" onClick={onCancel} disabled={loading}>
+              <FiX /> Cancel
             </button>
           )}
         </div>
