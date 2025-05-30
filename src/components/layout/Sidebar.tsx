@@ -101,6 +101,33 @@ const Sidebar = () => {
   const canManagePrivileges = isAdmin || privileges.includes('ManagePrivileges');
   const canManageUsers = isAdmin || privileges.includes('ManageUsers');
 
+  // Détection de tous les rôles contenant 'MANAGER' (insensible à la casse)
+  const isManager = user?.roles?.some(role =>
+    typeof role === 'string' && role.toUpperCase().includes('MANAGER')
+  );
+
+  // Détection user simple (ni admin, ni manager)
+  const isSimpleUser = !isAdmin && !isManager;
+  const simpleUserAllowedLabels = [
+    'New Request',
+    'Requests Validation',
+    'Profile',
+    'Send Message',
+    'Inbox',
+    'My Logs'
+  ];
+
+  // Liste des labels autorisés pour les managers
+  const managerAllowedLabels = [
+    'Dashboard',
+    'New Request',
+    'Requests Validation',
+    'Profile',
+    'My Logs',
+    'Send Message',
+    'Inbox'
+  ];
+
   const navigation = [
     {
       group: 'main',
@@ -109,8 +136,9 @@ const Sidebar = () => {
         { icon: <FiLayers />, label: 'Investment Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
         { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
         { icon: <FiPlusCircle />, label: 'New Request', to: PATH_DASHBOARD.addRequest, adminOnly: false },
-        { icon: <FiList />, label: 'Asset List', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
+        { icon: <FiList />, label: 'Requests Validation', to: PATH_DASHBOARD.pcRequests, adminOnly: false },
         { icon: <FiUser />, label: 'Profile', to: PATH_DASHBOARD.profile, adminOnly: false },
+        { icon: <FiDatabase />, label: 'Assets List', to: PATH_DASHBOARD.assetsList, adminOnly: false },
       ]
     },
     {
@@ -151,60 +179,83 @@ const Sidebar = () => {
       animate={{
         width: isCollapsed ? '4rem' : '16rem'
       }}
-      className="flex flex-col min-h-screen h-full bg-yazaki-black text-yazaki-gray overflow-hidden transition-all duration-300 shadow-xl"
+      className="flex flex-col min-h-screen h-full bg-white text-gray-700 overflow-hidden transition-all duration-300 shadow-2xl rounded-r-3xl border-r border-yazaki-red/20"
       style={{ height: '100vh', minHeight: '100%', position: 'sticky', top: 0 }}
     >
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-yazaki-darkGray">
+      <div className="p-4 flex items-center justify-between border-b border-yazaki-gray bg-gradient-to-r from-yazaki-red/5 to-white">
         {!isCollapsed && (
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-3"
           >
-            <div className="w-8 h-8 rounded-full bg-yazaki-red flex items-center justify-center">
-              <FiUser className="text-white" />
+            <div className="w-10 h-10 rounded-full bg-yazaki-red flex items-center justify-center shadow-md">
+              <FiUser className="text-white text-2xl" />
             </div>
-            <div className="text-sm font-medium">
-              <div className="text-yazaki-gray">{user?.firstName} {user?.lastName}</div>
-              <div className="text-xs text-yazaki-lightGray">{user?.email}</div>
+            <div className="text-base font-semibold">
+              <div className="text-gray-800">{user?.firstName} {user?.lastName}</div>
+              <div className="text-xs text-gray-400">{user?.email}</div>
             </div>
           </motion.div>
         )}
         {isCollapsed && (
-          <div className="w-8 h-8 rounded-full bg-yazaki-red flex items-center justify-center mx-auto">
-            <FiUser className="text-white" />
+          <div className="w-10 h-10 rounded-full bg-yazaki-red flex items-center justify-center mx-auto shadow-md">
+            <FiUser className="text-white text-2xl" />
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-1.5 rounded-full hover:bg-yazaki-lightGray transition-colors duration-200 text-yazaki-gray hover:text-yazaki-red"
+          className="p-2 rounded-full hover:bg-yazaki-red/10 transition-colors duration-200 text-gray-500 hover:text-yazaki-red"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {isCollapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
+          {isCollapsed ? <FiChevronRight size={22} /> : <FiChevronLeft size={22} />}
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-300">
         {navigation.map((section) => (
           <div key={section.group} className="mb-6">
             {!isCollapsed && section.label && (
-              <div className="px-2 mb-2 text-xs font-semibold text-yazaki-darkGray uppercase tracking-wider">
+              <div className="px-2 mb-2 text-xs font-bold text-yazaki-red uppercase tracking-wider">
                 {section.label}
               </div>
             )}
             <div className="space-y-1">
-              {section.items.filter(item => item.show === undefined || item.show).map((item) => (
-                <NavItem
-                  key={item.to}
-                  icon={item.icon}
-                  label={item.label}
-                  to={item.to}
-                  isAdminOnly={item.adminOnly}
-                  isCollapsed={isCollapsed}
-                />
-              ))}
+              {section.items
+                .filter(item =>
+                  isManager
+                    ? managerAllowedLabels.includes(item.label)
+                    : isSimpleUser
+                      ? simpleUserAllowedLabels.includes(item.label)
+                      : (item.show === undefined || item.show)
+                )
+                .map((item) => (
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center ${isCollapsed ? 'justify-center' : ''} p-3 rounded-xl transition-all duration-200 group text-base font-medium relative
+                      ${isActive
+                        ? 'bg-yazaki-red/10 text-yazaki-red font-bold shadow-md border-l-4 border-yazaki-red'
+                        : 'text-gray-600 hover:bg-yazaki-red/10 hover:text-yazaki-red'}
+                      focus:outline-none focus:ring-2 focus:ring-yazaki-red`
+                    }
+                    style={{ marginBottom: '0.25rem' }}
+                    onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
+                  >
+                    <span className={`text-2xl ${isCollapsed ? 'mx-auto flex justify-center py-2' : 'mr-3'} group-hover:text-yazaki-red transition-colors duration-200`}>{item.icon}</span>
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="ml-1"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </NavLink>
+                ))}
             </div>
           </div>
         ))}

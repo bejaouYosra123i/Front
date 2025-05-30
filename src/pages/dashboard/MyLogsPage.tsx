@@ -6,6 +6,29 @@ import { toast } from 'react-hot-toast';
 import Spinner from '../../components/general/Spinner';
 import moment from 'moment';
 
+moment.locale('en');
+
+const equipmentTypeTranslation: Record<string, string> = {
+  'Câble': 'Cable',
+  'Clavier': 'Keyboard',
+  'Écran': 'Monitor',
+  'PC de bureau': 'Desktop PC',
+  'Ordinateur portable': 'Laptop',
+  'Modem': 'Modem',
+  'Souris': 'Mouse',
+};
+
+function translateEquipmentType(description: string): string {
+  let result = description;
+  Object.entries(equipmentTypeTranslation).forEach(([fr, en]) => {
+    // Remplace le type français par l'anglais, insensible à la casse
+    result = result.replace(new RegExp(fr, 'gi'), en);
+  });
+  // Remplace "PC request" par "Asset request" si besoin
+  result = result.replace(/PC request/gi, 'Asset request');
+  return result;
+}
+
 const MyLogsPage = () => {
   const [myLogs, setMyLogs] = useState<ILogDto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,7 +74,7 @@ const MyLogsPage = () => {
               <span className='text-[#000000]'>{index + 1}</span>
               <span className='text-[#000000]'>{moment(item.createdAt).fromNow()}</span>
               <span className='text-[#000000]'>{item.userName}</span>
-              <span className='col-span-3 text-[#000000] break-words'>{item.description}</span>
+              <span className='col-span-3 text-[#000000] break-words'>{translateEquipmentType(item.description)}</span>
             </div>
           ))}
         </div>

@@ -40,21 +40,37 @@ const UpdatePasswordPage = () => {
 
   const onSubmit: SubmitHandler<IPasswordForm> = async (data) => {
     try {
+      console.log('Starting password update...');
       setLoading(true);
       const payload = {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       };
-      Object.keys(payload).forEach(
-        (key) => (payload[key] === undefined || payload[key] === null) && delete payload[key]
-      );
-      await axiosInstance.put('/Auth/update-password', payload);
+      console.log('Sending payload:', { ...payload, currentPassword: '***', newPassword: '***' });
+      
+      const response = await axiosInstance.put('/Auth/update-password', payload);
+      console.log('Server response:', response.data);
+      
       setLoading(false);
       toast.success('Password updated successfully');
       reset();
     } catch (error: any) {
+      console.error('Error updating password:', error);
       setLoading(false);
-      toast.error(error?.response?.data || 'An error occurred. Please contact admins');
+      
+      let errorMessage = 'An error occurred while updating password';
+      if (error.response) {
+        console.error('Error response:', error.response);
+        if (error.response.data) {
+          errorMessage = typeof error.response.data === 'string' 
+            ? error.response.data 
+            : error.response.data.message || JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 

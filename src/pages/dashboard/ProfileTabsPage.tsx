@@ -6,7 +6,7 @@ import UpdatePasswordPage from './UpdatePasswordPage';
 
 const tabs = [
   { label: 'Profile', icon: <HiUser className="inline text-xl mr-2" /> },
-  { label: 'Modifier infos', icon: <HiPencil className="inline text-xl mr-2" /> },
+  { label: 'Edit Information', icon: <HiPencil className="inline text-xl mr-2" /> },
   { label: 'Update password', icon: <HiKey className="inline text-xl mr-2" /> },
 ];
 

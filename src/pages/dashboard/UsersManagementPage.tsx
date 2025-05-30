@@ -13,14 +13,16 @@ import useAuth from '../../hooks/useAuth.hook';
 import usePrivileges from '../../hooks/usePrivileges';
 import { Navigate } from 'react-router-dom';
 import { PATH_PUBLIC } from '../../routes/paths';
-import { FiTrash2, FiX } from 'react-icons/fi';
+import { FiTrash2, FiX, FiPlus } from 'react-icons/fi';
+import RegisterFormOnly from './RegisterPage';
 
 const UsersManagementPage = () => {
   const [users, setUsers] = useState<IAuthUser[]>([]);
+  const [existingEmails, setExistingEmails] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IAuthUser | null>(null);
-  const [password, setPassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { user: currentUser } = useAuth();
   const privileges = usePrivileges();
@@ -35,6 +37,7 @@ const UsersManagementPage = () => {
       const response = await axiosInstance.get<IAuthUser[]>(USERS_LIST_URL);
       const { data } = response;
       setUsers(data);
+      setExistingEmails(data.map(u => u.email?.toLowerCase() || ''));
       setLoading(false);
     } catch (error) {
       toast.error('An Error happened. Please Contact admins');
@@ -58,7 +61,6 @@ const UsersManagementPage = () => {
       await axiosInstance.delete(`/auth/users/${selectedUser.id}`);
       toast.success('User deleted successfully');
       setShowDeleteModal(false);
-      setPassword('');
       setSelectedUser(null);
       getUsersList();
     } catch (error: any) {
@@ -81,51 +83,74 @@ const UsersManagementPage = () => {
   }
 
   return (
-    <div className='pageTemplate2 bg-gray-50'>
-      <h1 className='text-2xl font-bold text-gray-800'>Users Management</h1>
-      <UserCountSection usersList={users} />
-      <div className='grid grid-cols-1 lg:grid-cols-4 gap-x-4'>
+    <div className='min-h-screen bg-gray-50 p-6'>
+      {/* Header moderne */}
+      <div className='flex flex-col sm:flex-row items-center justify-between mb-8 gap-4'>
+        <h1 className='text-3xl font-bold text-gray-900 tracking-tight'>User Management</h1>
+        <Button
+          label={<span className='flex items-center gap-2'><FiPlus className='text-lg' /> Add User</span>}
+          onClick={() => setShowRegisterModal(true)}
+          type='button'
+          variant='primary'
+          className='shadow-lg px-6 py-2 rounded-xl text-base font-semibold'
+        />
+      </div>
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-xl w-full relative">
+            <button onClick={() => setShowRegisterModal(false)} className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl font-bold">&times;</button>
+            <h2 className='text-2xl font-bold text-yazaki-red mb-6 text-center'>Register New User</h2>
+            <RegisterFormOnly
+              existingEmails={existingEmails}
+              onErrorEmailExists={() => setShowRegisterModal(false)}
+              onSuccessRegister={() => {
+                setShowRegisterModal(false);
+                getUsersList();
+              }}
+            />
+          </div>
+        </div>
+      )}
+      <div className='mb-8'>
+        <UserCountSection usersList={users} />
+      </div>
+      <div className='grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8'>
         <UserChartSection usersList={users} />
         <LatestUsersSection usersList={users} />
       </div>
-      <UsersTableSection 
-        usersList={users} 
-        onDeleteClick={handleDeleteClick}
-      />
+      <div className='mb-8'>
+        <UsersTableSection 
+          usersList={users} 
+          onDeleteClick={handleDeleteClick}
+        />
+      </div>
 
       {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Confirm deletion</h2>
-            <p className="mb-4">
-            Are you sure you want to delete the user <span className="font-semibold">{selectedUser.userName}</span> ?
+          <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4 text-yazaki-red text-center">Confirm Deletion</h2>
+            <p className="mb-6 text-center text-gray-700">
+              Are you sure you want to delete the user <span className="font-semibold">{selectedUser.userName}</span>?
             </p>
-            <p className="mb-4">To confirm, please enter <span className="font-semibold">your password</span> :</p>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-              placeholder="Enter your password"
-            />
             <div className="flex justify-end space-x-4">
               <Button
-                label={<span className="flex items-center gap-2"><FiX /> Annuler</span>}
+                label={<span className="flex items-center gap-2"><FiX /> Cancel</span>}
                 onClick={() => {
                   setShowDeleteModal(false);
-                  setPassword('');
                   setSelectedUser(null);
                 }}
                 type="button"
                 variant="light"
                 disabled={deleteLoading}
+                className="px-6 py-2 rounded-lg text-base"
               />
               <Button
-                label={<span className="flex items-center gap-2"><FiTrash2 /> {deleteLoading ? "Suppression..." : "Supprimer"}</span>}
+                label={<span className="flex items-center gap-2"><FiTrash2 /> {deleteLoading ? "Deleting..." : "Delete"}</span>}
                 onClick={handleDelete}
                 type="button"
                 variant="danger"
                 disabled={deleteLoading}
+                className="px-6 py-2 rounded-lg text-base"
               />
             </div>
           </div>

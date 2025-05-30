@@ -62,8 +62,6 @@ interface InvestmentFormCreateProps {
   onCancel?: () => void;
 }
 
-const softRed = 'bg-[#e53935]';
-const softRedText = 'text-[#e53935]';
 const softGray = 'bg-gray-50';
 const borderGray = 'border-gray-200';
 
@@ -511,14 +509,14 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
   return (
     <div className="w-full min-h-screen bg-white">
       {/* Red banner with centered title */}
-      <div className="bg-[#e60012] py-4 mb-10">
+      <div className="bg-yazaki-red py-4 mb-10">
         <h1 className="text-white text-2xl md:text-3xl font-bold text-center">IT Investment Form</h1>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
             <label className="block text-base font-semibold mb-1 text-gray-800">Region</label>
-            <select name="region" value={form.region} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <select name="region" value={form.region} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white" required>
               <option value="">Select a region</option>
               <option value="Europe">Europe</option>
               <option value="North America">North America</option>
@@ -530,7 +528,7 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
           </div>
           <div>
             <label className="block text-base font-semibold mb-1 text-gray-800">Currency</label>
-            <select name="currency" value={form.currency} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required>
+            <select name="currency" value={form.currency} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white" required>
               <option value="">Select a currency</option>
               <option value="EUR">EUR</option>
               <option value="USD">USD</option>
@@ -542,11 +540,11 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
           </div>
           <div>
             <label className="block text-base font-semibold mb-1 text-gray-800">Location</label>
-            <input name="location" value={form.location} onChange={handleChange} placeholder="Enter location" className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+            <input name="location" value={form.location} onChange={handleChange} placeholder="Enter location" className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white" required />
           </div>
           <div>
             <label className="block text-base font-semibold mb-1 text-gray-800">Request Date</label>
-            <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] bg-white" required />
+            <input name="reqDate" type="date" value={form.reqDate} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yazaki-red bg-white" required />
           </div>
         </div>
         <div className="flex flex-wrap gap-6 mb-8">
@@ -634,14 +632,14 @@ const InvestmentFormCreate: React.FC<InvestmentFormCreateProps> = ({ onSuccess, 
             ))}
           </tbody>
         </table>
-        <button type="button" className="bg-[#e60012] text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-[#c62828] transition flex items-center gap-2" onClick={addItem}>
+        <button type="button" className="bg-yazaki-red text-white px-4 py-2 rounded-lg mb-6 shadow-sm hover:bg-yazaki-red/90 transition flex items-center gap-2" onClick={addItem}>
           <FiPlus /> Add Item
         </button>
         <div className="flex space-x-2 mt-4">
-          <button type="submit" className="bg-[#e60012] text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#c62828] transition flex items-center gap-2" disabled={loading}>
+          <button type="submit" className="bg-yazaki-red text-white px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-red/90 transition flex items-center gap-2" disabled={loading}>
             {loading ? (isEdit ? 'Updating…' : 'Sending…') : (isEdit ? 'Update Form' : 'Create Form')}
           </button>
-          <button type="button" className="bg-gray-200 text-blue-700 px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#fbeaec] hover:text-[#e60012] transition flex items-center gap-2" onClick={() => exportFormToExcelPro(form)}>
+          <button type="button" className="bg-gray-200 text-yazaki-red px-6 py-2 rounded-lg font-semibold shadow-sm hover:bg-yazaki-red/10 hover:text-yazaki-red transition flex items-center gap-2" onClick={() => exportFormToExcelPro(form)}>
             <FiDownload /> Download Excel
           </button>
           {onCancel && (

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { createLog } from '../../utils/logs';
+import useAuth from '../../hooks/useAuth.hook';
 
 interface AssetScrub {
   id: number;
@@ -54,6 +56,7 @@ const AssetScrubPage = () => {
   const [selected, setSelected] = useState<number[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newAsset, setNewAsset] = useState<Omit<AssetScrub, 'id'>>(emptyAsset);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -82,6 +85,23 @@ const AssetScrubPage = () => {
       setShowAdd(false);
       setNewAsset(emptyAsset);
       fetchData();
+
+      // Message de succès
+      toast.success('Created successfully!');
+
+      // Utilise le vrai nom d'utilisateur connecté
+      const userName = user?.userName || user?.name || 'Unknown';
+      const description = `New Asset scrap request created for ${newAsset.assetOwner} - Asset: ${newAsset.description} - Serial: ${newAsset.serialNumber}`;
+      console.log('Sending log to backend:', { description, userName });
+      try {
+        await createLog(description, userName);
+        toast.success('Log sent to backend!');
+        console.log('Log successfully created!');
+      } catch (err) {
+        toast.error('Log creation failed!');
+        console.error('Log creation error:', err);
+      }
+
     } catch (err) {
       alert('Erreur lors de l\'ajout');
     }
@@ -108,70 +128,57 @@ const AssetScrubPage = () => {
   // Fonction d'export PDF
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
-    // Titre centré
-    doc.setFontSize(22);
+    // Logo (placeholder, à remplacer par le vrai chemin/base64 si besoin)
+    // doc.addImage('logo.png', 'PNG', 40, 20, 80, 40);
+    // Titre corporate
+    doc.setFontSize(24);
+    doc.setTextColor(230, 0, 18); // Yazaki red
     doc.setFont('helvetica', 'bold');
-    doc.text('Asset Scrap Request Report', doc.internal.pageSize.getWidth() / 2, 48, { align: 'center' });
-    // Date en dessous
+    doc.text('Asset Scrap Request Report', doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+    // Sous-titre
     doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 70, { align: 'center' });
-    // Tableau principal
+    doc.text(`Generated on: ${new Date().toLocaleDateString()} by Asset Management System`, doc.internal.pageSize.getWidth() / 2, 80, { align: 'center' });
+    // Tableau principal (infos principales seulement)
     autoTable(doc, {
       head: [[
-        'Company Code', 'Plant Code', 'Asset Number', 'Sub Number', 'Serial Number', 'Quantity',
-        'Total/Partial retirement', 'Cost Center', 'Description', 'Location', 'Acquisition Date',
-        'Acquisition Amount Euro', 'Acquisition Amount Local', 'Net Book Value Euro',
-        'Net Book Value Local', 'Asset Owner', 'Data Input Date']],
+        'Company Code', 'Plant Code', 'Asset Number', 'Serial Number', 'Quantity',
+        'Description', 'Location', 'Acquisition Date', 'Asset Owner']],
       body: data.map(asset => [
         asset.companyCode,
         asset.plantCode,
         asset.assetNumber,
-        asset.subNumber,
         asset.serialNumber,
         asset.quantity.toString(),
-        asset.totalPartialRetirement,
-        asset.costCenter,
         asset.description,
         asset.location,
         asset.acquisitionDate ? asset.acquisitionDate.slice(0, 10) : '',
-        asset.acquisitionAmountEuro?.toString() || '',
-        asset.acquisitionAmountLocal?.toString() || '',
-        asset.netBookValueEuro?.toString() || '',
-        asset.netBookValueLocal?.toString() || '',
-        asset.assetOwner,
-        asset.dataInputDate ? asset.dataInputDate.slice(0, 10) : ''
+        asset.assetOwner
       ]),
-      startY: 90,
+      startY: 100,
       theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, overflow: 'linebreak' },
-      headStyles: { fillColor: [255, 193, 7], textColor: 20, fontStyle: 'bold', halign: 'center', valign: 'middle', font: 'helvetica', fontSize: 11 },
-      bodyStyles: { valign: 'middle', font: 'helvetica', fontSize: 10 },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 7, overflow: 'linebreak', lineColor: [230,0,18], lineWidth: 0.5 },
+      headStyles: { fillColor: [255, 230, 230], textColor: 20, fontStyle: 'bold', halign: 'center', valign: 'middle', font: 'helvetica', fontSize: 11, lineColor: [230,0,18], lineWidth: 1 },
       columnStyles: {
-        0: { cellWidth: 60 }, // Company Code
-        1: { cellWidth: 60 }, // Plant Code
-        2: { cellWidth: 90 }, // Asset Number
-        3: { cellWidth: 60 }, // Sub Number
-        4: { cellWidth: 90 }, // Serial Number
-        5: { cellWidth: 50, halign: 'right' }, // Quantity
-        6: { cellWidth: 90 }, // Total/Partial retirement
-        7: { cellWidth: 70 }, // Cost Center
-        8: { cellWidth: 120 }, // Description
-        9: { cellWidth: 90 }, // Location
-        10: { cellWidth: 80 }, // Acquisition Date
-        11: { cellWidth: 90, halign: 'right' }, // Acquisition Amount Euro
-        12: { cellWidth: 90, halign: 'right' }, // Acquisition Amount Local
-        13: { cellWidth: 90, halign: 'right' }, // Net Book Value Euro
-        14: { cellWidth: 90, halign: 'right' }, // Net Book Value Local
-        15: { cellWidth: 80 }, // Asset Owner
-        16: { cellWidth: 150, halign: 'center' }, // Data Input Date
+        0: { cellWidth: 70 }, // Company Code
+        1: { cellWidth: 70 }, // Plant Code
+        2: { cellWidth: 110 }, // Asset Number
+        3: { cellWidth: 110 }, // Serial Number
+        4: { cellWidth: 50, halign: 'right' }, // Quantity
+        5: { cellWidth: 140 }, // Description
+        6: { cellWidth: 90 }, // Location
+        7: { cellWidth: 90, halign: 'center' }, // Acquisition Date
+        8: { cellWidth: 90 }, // Asset Owner
       },
       didDrawPage: (data) => {
-        // Optionnel : ajouter un pied de page ou logo ici
+        // Pied de page
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text('© ' + new Date().getFullYear() + ' Yazaki Asset Management System', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 20, { align: 'center' });
       }
     });
-    // Section d'approbation espacée et encadrée
+    // Section d'approbation encadrée et espacée
     const approvalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 40 : 200;
     autoTable(doc, {
       body: [[

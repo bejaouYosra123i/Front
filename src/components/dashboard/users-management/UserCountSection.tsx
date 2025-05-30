@@ -40,25 +40,15 @@ const UserCountSection = ({ usersList }: IProps) => {
   });
 
   const userCountData = [
-    { count: admins, role: RolesEnum.ADMIN, icon: FaUserShield, color: '#D7000F' },
-    { count: managers, role: RolesEnum.MANAGER, icon: FaUserTie, color: '#333333' },
-    { count: users, role: RolesEnum.USER, icon: FaUser, color: '#B0B0B0' },
-    { count: itManagers, role: RolesEnum.IT_MANAGER, icon: FaUserSecret, color: '#FFD600' },
-    { count: rhManagers, role: RolesEnum.RH_MANAGER, icon: FaUserNurse, color: '#7C3AED' },
-    { count: plantManagers, role: RolesEnum.PLANT_MANAGER, icon: FaUserAstronaut, color: '#FF9900' },
+    // Toutes les cartes sont supprimées
   ];
 
   return (
-    <div className='flex flex-col gap-2 mb-4'>
-      <div className='w-full flex flex-col lg:flex-row gap-4'>
-        <div className='flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4'>
-          {userCountData.map((item, index) => (
-            <UserCountCard key={index} count={item.count} role={item.role} icon={item.icon} color={item.color} />
-          ))}
-        </div>
-        <div className='flex items-center justify-end min-w-[180px] mt-2 lg:mt-0'>
-          <Button label='Add New User' onClick={() => navigate(PATH_DASHBOARD.register)} type='button' variant='light' disabled={!canManageUsers} />
-        </div>
+    <div className='flex flex-col items-center gap-6 mb-8 w-full'>
+      <div className='w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-6'>
+        {userCountData.map((item, index) => (
+          <UserCountCard key={index} count={item.count} role={item.role} icon={item.icon} color={item.color} />
+        ))}
       </div>
     </div>
   );

@@ -28,6 +28,7 @@ import useAuth from '../hooks/useAuth.hook';
 import usePrivileges from '../hooks/usePrivileges';
 import UpdateProfilePage from '../pages/dashboard/UpdateProfilePage';
 import UpdatePasswordPage from '../pages/dashboard/UpdatePasswordPage';
+import AssetsListPage from '../pages/dashboard/AssetsListPage';
 
 // Guards personnalisés
 const UsersManagementGuard = ({ children }: { children: React.ReactNode }) => {
@@ -102,6 +103,7 @@ const GlobalRouter = () => {
           <Route path={PATH_DASHBOARD.profile} element={<ProfileTabsPage />} />
           <Route path="/dashboard/update-profile" element={<UpdateProfilePage />} />
           <Route path="/dashboard/update-password" element={<UpdatePasswordPage />} />
+          <Route path={PATH_DASHBOARD.assetsList} element={<AssetsListPage />} />
         </Route>
         <Route element={<AuthGuard roles={managerAccessRoles} />}>
           {/* <Route path={PATH_DASHBOARD.manager} element={<ManagerPage />} /> */}

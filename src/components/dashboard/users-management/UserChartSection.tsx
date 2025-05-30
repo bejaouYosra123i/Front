@@ -10,7 +10,7 @@ interface IProps {
 
 // Couleurs synchronisées avec UserCountSection
 const ROLE_COLORS = [
-  '#D7000F', // ADMIN (rouge)
+  '#ED1C24', // ADMIN (rouge yazaki)
   '#333333', // MANAGER (noir)
   '#B0B0B0', // USER (gris)
   '#FFD600', // IT_MANAGER (jaune)
@@ -54,22 +54,32 @@ const UserChartSection = ({ usersList }: IProps) => {
         position: 'top' as const,
         labels: {
           color: '#1f2937',
-          font: { size: 12 }
+          font: { size: 14, weight: 'bold', family: 'Inter, sans-serif' },
+          padding: 20,
         }
       },
       tooltip: {
-        backgroundColor: '#1f2937',
-        titleFont: { size: 12 },
-        bodyFont: { size: 12 },
-        padding: 10
+        backgroundColor: '#fff',
+        titleColor: '#ED1C24',
+        bodyColor: '#1f2937',
+        borderColor: '#ED1C24',
+        borderWidth: 1,
+        titleFont: { size: 14, weight: 'bold', family: 'Inter, sans-serif' },
+        bodyFont: { size: 13, family: 'Inter, sans-serif' },
+        padding: 12
       }
+    },
+    hover: {
+      mode: 'nearest',
+      intersect: true
     },
     scales: {
       x: {
         grid: { display: false },
         ticks: {
           color: '#1f2937',
-          font: { size: 12 }
+          font: { size: 13, weight: 'bold', family: 'Inter, sans-serif' },
+          padding: 8,
         }
       },
       y: {
@@ -77,12 +87,25 @@ const UserChartSection = ({ usersList }: IProps) => {
         ticks: {
           stepSize: 1,
           color: '#1f2937',
-          font: { size: 12 }
+          font: { size: 13, weight: 'bold', family: 'Inter, sans-serif' },
+          padding: 8,
         },
         grid: {
           color: '#e5e7eb',
           borderDash: [5, 5]
         }
+      }
+    },
+    animation: {
+      duration: 900,
+      easing: 'easeOutQuart',
+    },
+    elements: {
+      bar: {
+        borderRadius: 12,
+        hoverBackgroundColor: '#ED1C24',
+        hoverBorderColor: '#ED1C24',
+        borderSkipped: false,
       }
     }
   };
@@ -101,9 +124,9 @@ const UserChartSection = ({ usersList }: IProps) => {
   };
 
   return (
-    <div className='col-span-1 lg:col-span-3 bg-white p-5 rounded-lg shadow-sm'>
-      <h1 className='text-lg font-medium text-gray-900 mb-4 tracking-tight'>Répartition des utilisateurs par rôle</h1>
-      <div className='bg-white p-3 rounded-lg'>
+    <div className='col-span-1 lg:col-span-3 bg-gray-50 p-6 rounded-3xl shadow-lg'>
+      <h1 className='text-2xl font-extrabold text-yazaki-red mb-6 tracking-tight'>User distribution by role</h1>
+      <div className='bg-white p-5 rounded-2xl shadow flex items-center justify-center min-h-[340px]'>
         <Bar options={chartOptions} data={chartData} />
       </div>
     </div>

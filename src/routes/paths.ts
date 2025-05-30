@@ -27,4 +27,5 @@ export const PATH_PUBLIC = {
     profile: '/dashboard/profile',
     assetLifecycle: '/dashboard/asset-lifecycle',
     privileges: '/dashboard/privileges',
+    assetsList: '/dashboard/assets-list',
   };

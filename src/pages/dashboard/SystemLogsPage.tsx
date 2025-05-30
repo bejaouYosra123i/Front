@@ -37,32 +37,57 @@ const SystemLogsPage = () => {
     getLogs();
   }, []);
 
+  moment.locale('en');
+
+  const equipmentTypeTranslation: Record<string, string> = {
+    'Câble': 'Cable',
+    'Clavier': 'Keyboard',
+    'Écran': 'Monitor',
+    'PC de bureau': 'Desktop PC',
+    'Ordinateur portable': 'Laptop',
+    'Modem': 'Modem',
+    'Souris': 'Mouse',
+  };
+
+  function translateEquipmentType(description: string): string {
+    let result = description;
+    Object.entries(equipmentTypeTranslation).forEach(([fr, en]) => {
+      // Remplace le type français par l'anglais, insensible à la casse
+      result = result.replace(new RegExp(fr, 'gi'), en);
+    });
+    // Remplace "PC request" par "Asset request" si besoin
+    result = result.replace(/PC request/gi, 'Asset request');
+    return result;
+  }
+
   if (loading) {
     return (
-      <div className='w-full'>
+      <div className='w-full flex justify-center items-center h-screen'>
         <Spinner />
       </div>
     );
   }
 
   return (
-    <div className='pageTemplate2'>
-      <h1 className='text-2xl font-bold'>System Logs</h1>
-      <div className='pageTemplate3 items-stretch'>
-        <div className='grid grid-cols-6 p-2 border-2 border-gray-200 rounded-lg'>
+    <div className='container mx-auto p-6 bg-[#FFFFFF] min-h-screen'>
+      <h1 className='text-3xl font-bold text-[#000000] mb-6'>System Logs</h1>
+      <div className='bg-[#D3DCE6] p-4 rounded-lg shadow-md'>
+        <div className='grid grid-cols-6 gap-4 p-2 font-semibold text-[#000000] border-b-2 border-[#ED1C24]'>
           <span>No</span>
           <span>Date</span>
           <span>Username</span>
           <span className='col-span-3'>Description</span>
         </div>
-        {logs.map((item, index) => (
-          <div key={index} className='grid grid-cols-6 p-2 border-2 border-gray-200 rounded-lg'>
-            <span>{index + 1}</span>
-            <span>{moment(item.createdAt).fromNow()}</span>
-            <span>{item.userName}</span>
-            <span className='col-span-3'>{item.description}</span>
-          </div>
-        ))}
+        <div className='space-y-2 mt-4'>
+          {logs.filter(item => item.userName !== 'TEST').map((item, index) => (
+            <div key={index} className='grid grid-cols-6 gap-4 p-3 bg-[#FFFFFF] rounded-lg shadow-sm hover:bg-[#D3DCE6] transition-colors duration-200 border border-[#D3DCE6]'>
+              <span className='text-[#000000]'>{index + 1}</span>
+              <span className='text-[#000000]'>{moment(item.createdAt).fromNow()}</span>
+              <span className='text-[#000000]'>{item.userName}</span>
+              <span className='col-span-3 text-[#000000] break-words'>{translateEquipmentType(item.description)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

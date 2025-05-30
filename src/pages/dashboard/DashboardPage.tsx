@@ -2,9 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth.hook';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { useSmartNotifications } from '../../hooks/useSmartNotifications';
-import { FiAlertTriangle, FiInfo, FiBell, FiTrash2, FiRefreshCw, FiTool } from 'react-icons/fi';
+import { FiAlertTriangle, FiInfo, FiBell, FiTrash2, FiRefreshCw, FiTool, FiDatabase, FiCheckCircle, FiSearch } from 'react-icons/fi';
+import SummaryCard from '../../components/dashboard/SummaryCard';
+import type { SmartNotification } from '../../hooks/useSmartNotifications';
+import { Navigate } from 'react-router-dom';
+import { PATH_DASHBOARD } from '../../routes/paths';
 
 interface Asset {
   id: number;
@@ -32,6 +36,16 @@ const DashboardPage: React.FC = () => {
   const [visibleNotifications, setVisibleNotifications] = useState<any[]>([]);
   const [disappearing, setDisappearing] = useState<string[]>([]);
   const timers = useRef<{[key:number]: NodeJS.Timeout}>({});
+
+  const isManager = user?.roles?.some(role =>
+    typeof role === 'string' && role.toUpperCase().includes('MANAGER')
+  );
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const isSimpleUser = !isAdmin && !isManager;
+
+  if (isSimpleUser) {
+    return <Navigate to={PATH_DASHBOARD.addRequest} />;
+  }
 
   useEffect(() => {
     fetchAssets();
@@ -98,12 +112,7 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  // Filter assets for USER role
-  const isUser = user?.roles?.includes('USER');
-  const userName = user?.userName || user?.firstName || user?.email;
-  const visibleAssets = isUser
-    ? assets.filter(asset => asset.assignedTo?.toLowerCase() === userName?.toLowerCase())
-    : assets;
+  const visibleAssets = assets;
 
   const filteredAssets = statusFilter === 'All' 
     ? visibleAssets
@@ -155,80 +164,102 @@ const DashboardPage: React.FC = () => {
     setChartData(data);
   }, [visibleAssets]);
 
-  // Ajout d'une variable pour vérifier si l'utilisateur est admin
-  const isAdmin = user?.roles?.includes('ADMIN');
+  // Grouper les notifications par date
+  const notificationsByDate = notifications.reduce((acc: Record<string, typeof notifications>, notif) => {
+    if (!acc[notif.date]) acc[notif.date] = [];
+    acc[notif.date].push(notif);
+    return acc;
+  }, {});
 
-  // Affichage toast uniforme pour toutes les notifications
+  // Ne garder que les notifications du jour actuel (toutes catégories)
+  const today = new Date().toISOString().slice(0, 10);
+  const todaysNotifications: SmartNotification[] = notificationsByDate[today] || [];
+
+  let filteredNotifications = todaysNotifications;
+  if (isSimpleUser) {
+    filteredNotifications = todaysNotifications.filter(
+      notif => notif.category !== 'request'
+    );
+  }
+
+  // Gestion de l'apparition/disparition des notifications
   useEffect(() => {
-    notifications.forEach((notif) => {
-      const toastId = `notif-${notif.type}-${notif.text}`;
-      toast.dismiss(toastId); // éviter les doublons
-      toast(notif.text, {
-        id: toastId,
-        icon: notif.type === 'urgent' ? '🔔' : notif.type === 'warning' ? '⚠️' : 'ℹ️',
-        duration: 5000,
-        style: {
-          background: '#fff',
-          color: notif.type === 'urgent'
-            ? '#e60012'
-            : notif.type === 'warning'
-            ? '#e6a800'
-            : '#1976d2',
-          fontWeight: 'bold',
-          fontSize: '1rem',
-          borderRadius: '12px',
-          boxShadow: '0 4px 24px 0 rgba(0,0,0,0.10)',
-          padding: '16px 24px',
-        },
-        position: 'top-right',
-      });
+    // Nettoyer les timers existants
+    Object.values(timers.current).forEach(timer => clearTimeout(timer));
+    timers.current = {};
+
+    // Mettre à jour les notifications visibles
+    setVisibleNotifications(filteredNotifications);
+
+    // Configurer la disparition automatique après 3 secondes
+    filteredNotifications.forEach((notif, index) => {
+      const timer = setTimeout(() => {
+        setDisappearing(prev => [...prev, notif.text]);
+        setTimeout(() => {
+          setVisibleNotifications(prev => prev.filter(n => n.text !== notif.text));
+          setDisappearing(prev => prev.filter(text => text !== notif.text));
+        }, 300); // Durée de l'animation de disparition
+      }, 3000 + (index * 500)); // Délai progressif pour chaque notification
+      timers.current[index] = timer;
     });
-  }, [notifications]);
+
+    return () => {
+      Object.values(timers.current).forEach(timer => clearTimeout(timer));
+    };
+  }, [JSON.stringify(filteredNotifications)]);
+
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'in service':
+        return <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold"><FiCheckCircle className="mr-1" />In Service</span>;
+      case 'in maintenance':
+        return <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold"><FiTool className="mr-1" />In Maintenance</span>;
+      case 'replaced':
+        return <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold"><FiRefreshCw className="mr-1" />Replaced</span>;
+      case 'scrap':
+        return <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold"><FiTrash2 className="mr-1" />Scrap</span>;
+      default:
+        return <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs font-semibold">{status}</span>;
+    }
+  };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Asset Lifecycle</h1>
-
-      {/* SEARCH BAR */}
-      <div className="mb-6 flex flex-wrap gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search for an asset..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935] w-72"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-white py-10 px-2 md:px-8 flex flex-col items-center">
+      {/* NOTIFICATIONS À DROITE */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {visibleNotifications.map((notif, idx) => (
+          <div
+            key={`${notif.text}-${idx}`}
+            className={`transform transition-all duration-300 ease-in-out ${
+              disappearing.includes(notif.text) 
+                ? 'opacity-0 translate-x-[100%]' 
+                : 'opacity-100 translate-x-0'
+            }`}
+          >
+            <div className="bg-white rounded-lg shadow-lg p-3 border-l-4 border-yazaki-red flex items-center gap-3 min-w-[300px]">
+              {notif.type === 'urgent' && <FiAlertTriangle className="text-yazaki-red text-xl" />}
+              {notif.type === 'warning' && <FiInfo className="text-yazaki-red text-xl" />}
+              {notif.type === 'info' && <FiInfo className="text-yazaki-red text-xl" />}
+              <span className="text-sm font-medium text-gray-700">{notif.text}</span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-        <div className="bg-gray-100 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Total Assets</div>
-          <div className="text-3xl font-bold">{summary.total}</div>
-        </div>
-        <div className="bg-green-100 text-green-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">In Service</div>
-          <div className="text-3xl font-bold">{summary.inService}</div>
-        </div>
-        <div className="bg-orange-100 text-orange-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">In Maintenance</div>
-          <div className="text-3xl font-bold">{summary.inMaintenance}</div>
-        </div>
-        <div className="bg-blue-100 text-blue-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Replaced</div>
-          <div className="text-3xl font-bold">{summary.replaced}</div>
-        </div>
-        <div className="bg-red-100 text-red-800 rounded-xl shadow p-6 text-center">
-          <div className="text-lg font-semibold mb-2">Scrap</div>
-          <div className="text-3xl font-bold">{summary.scrap}</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8 w-full max-w-6xl">
+        <SummaryCard icon={<FiDatabase size={28} />} label="Total Assets" value={summary.total} color="bg-gray-100" />
+        <SummaryCard icon={<FiCheckCircle size={28} />} label="In Service" value={summary.inService} color="bg-green-100 text-green-800" />
+        <SummaryCard icon={<FiTool size={28} />} label="In Maintenance" value={summary.inMaintenance} color="bg-orange-100 text-orange-800" />
+        <SummaryCard icon={<FiRefreshCw size={28} />} label="Replaced" value={summary.replaced} color="bg-blue-100 text-blue-800" />
+        <SummaryCard icon={<FiTrash2 size={28} />} label="Scrap" value={summary.scrap} color="bg-red-100 text-red-800" />
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-4 items-center">
+      <div className="mb-6 flex flex-wrap gap-4 items-center justify-center">
         <label className="font-medium">Filter by status:</label>
         <select
-          className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#e53935]"
+          className="border rounded-2xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -241,115 +272,91 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* STATUS CHART */}
-      <div className="bg-white rounded-xl shadow p-6 mb-8">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={filteredChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
+      <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border border-blue-100 w-full max-w-5xl">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 tracking-wide">Assets by Status Over Time</h2>
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={filteredChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="colorInService" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#43a047" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#43a047" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorInMaintenance" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#FFA500" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#FFA500" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorReplaced" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#1976d2" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#1976d2" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorScrap" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#e53935" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#e53935" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 6" vertical={false} stroke="#e3e8ee" />
+            <XAxis dataKey="date" label={{ value: "Acquisition Date", position: "insideBottomRight", offset: -5, fontSize: 13, fill: '#8884d8' }} tick={{ fontSize: 13, fill: '#8884d8' }} axisLine={false} tickLine={false} />
+            <YAxis allowDecimals={false} label={{ value: "Number of assets", angle: -90, position: "insideLeft", fontSize: 13, fill: '#8884d8' }} tick={{ fontSize: 13, fill: '#8884d8' }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ borderRadius: 16, background: "#fff", border: "1px solid #e3e8ee", fontWeight: 500 }}
+              labelFormatter={label => `Date : ${label}`}
+              formatter={(value, name) => [`${value} asset(s)`, name]}
+            />
+            <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontWeight: 500, fontSize: 15 }} />
             {(statusFilter === 'All' || statusFilter === 'In Service') && (
-              <Line type="monotone" dataKey="In Service" stroke="#43a047" strokeWidth={3} dot={{ r: 5 }} name="In Service" />
+              <Area
+                type="monotone"
+                dataKey="In Service"
+                stroke="#43a047"
+                fillOpacity={1}
+                fill="url(#colorInService)"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "#43a047", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 8 }}
+                name="In Service"
+              />
             )}
             {(statusFilter === 'All' || statusFilter === 'In Maintenance') && (
-              <Line type="monotone" dataKey="In Maintenance" stroke="#FFA500" strokeWidth={3} dot={{ r: 5 }} name="In Maintenance" />
+              <Area
+                type="monotone"
+                dataKey="In Maintenance"
+                stroke="#FFA500"
+                fillOpacity={1}
+                fill="url(#colorInMaintenance)"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "#FFA500", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 8 }}
+                name="In Maintenance"
+              />
             )}
             {(statusFilter === 'All' || statusFilter === 'Replaced') && (
-              <Line type="monotone" dataKey="Replaced" stroke="#1976d2" strokeWidth={3} dot={{ r: 5 }} name="Replaced" />
+              <Area
+                type="monotone"
+                dataKey="Replaced"
+                stroke="#1976d2"
+                fillOpacity={1}
+                fill="url(#colorReplaced)"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "#1976d2", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 8 }}
+                name="Replaced"
+              />
             )}
             {(statusFilter === 'All' || statusFilter === 'Scrap') && (
-              <Line type="monotone" dataKey="Scrap" stroke="#e53935" strokeWidth={3} dot={{ r: 5 }} name="Scrap" />
+              <Area
+                type="monotone"
+                dataKey="Scrap"
+                stroke="#e53935"
+                fillOpacity={1}
+                fill="url(#colorScrap)"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "#e53935", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 8 }}
+                name="Scrap"
+              />
             )}
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Assets Table */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Asset Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned To
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
-                </th>
-                {isAdmin && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {searchedAssets.map((asset) => (
-                <tr key={asset.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {asset.serialNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {asset.description}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {asset.category}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(asset.status)}`}> 
-                      {asset.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {asset.assignedTo}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {asset.location}
-                  </td>
-                  {isAdmin && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-3 justify-center">
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'In Maintenance')}
-                          className="text-yellow-600 hover:text-yellow-900 text-xl"
-                          title="Set to Maintenance"
-                        >
-                          <FiTool />
-                        </button>
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'Replaced')}
-                          className="text-blue-600 hover:text-blue-900 text-xl"
-                          title="Set to Replaced"
-                        >
-                          <FiRefreshCw />
-                        </button>
-                        <button
-                          onClick={() => updateAssetStatus(asset.id, 'Scrap')}
-                          className="text-red-600 hover:text-red-900 text-xl"
-                          title="Set to Scrap"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
 
       {loading && (
