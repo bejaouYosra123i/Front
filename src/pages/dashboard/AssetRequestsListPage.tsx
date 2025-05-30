@@ -103,18 +103,18 @@ const AssetRequestsListPage: React.FC = () => {
 
   const handleStatus = async (id: number, status: string) => {
     if (!isApprover) {
-      toast.error("Seuls les managers autorisés peuvent valider ou refuser une demande.");
+      toast.error("Only authorized managers can approve or reject a request.");
       return;
     }
     try {
       await requestService.updateStatus(id, status);
       setRequests(reqs => reqs.map(r => r.id === id ? { ...r, status } : r));
-      toast.success(`Votre approbation a été enregistrée !`);
+      toast.success(`Your approval has been recorded.!`);
     } catch (e: any) {
       if (e.response?.status === 400) {
-        toast.error("Vous avez déjà approuvé cette demande.");
+        toast.error("You have already approved this request..");
       } else {
-        toast.error('Erreur lors de la mise à jour du statut');
+        toast.error('Error while updating the status');
       }
     }
   };
@@ -206,7 +206,7 @@ const AssetRequestsListPage: React.FC = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestion des Demandes d'Assets</h1>
+        <h1 className="text-2xl font-bold">Asset Request Management</h1>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"

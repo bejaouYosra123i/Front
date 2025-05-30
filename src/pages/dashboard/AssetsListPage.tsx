@@ -99,6 +99,33 @@ const AssetsListPage: React.FC = () => {
     'Modem': 'Modem',
     'Ordinateur': 'Desktop PC',
     'Portable': 'Laptop',
+    'PC': 'Desktop PC',
+    'Laptop': 'Laptop',
+    'Cable': 'Cable',
+    'Keyboard': 'Keyboard',
+    'Mouse': 'Mouse',
+    'Monitor': 'Monitor'
+  };
+
+  const translateDescription = (description: string): string => {
+    // Supprimer le préfixe 'Desktop PC', 'PC' ou 'Ordinateur' au début, avec ou sans 'de bureau'
+    let desc = description.replace(/^(Desktop PC|PC|Ordinateur)( de bureau)?\s+/i, '');
+    // Supprimer 'de bureau' s'il reste ailleurs
+    desc = desc.replace(/\bde bureau\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+
+    // Handle "requested by" format
+    const match = desc.match(/^([A-Za-zÀ-ÿ]+) requested by (.+)$/i);
+    if (match) {
+      const typeFr = match[1];
+      const who = match[2];
+      const typeEn = descriptionLabels[typeFr] || typeFr;
+      return `${typeEn} requested by ${who}`;
+    }
+
+    // Handle simple descriptions
+    const words = desc.split(' ');
+    const translatedWords = words.map(word => descriptionLabels[word] || word);
+    return translatedWords.join(' ');
   };
 
   return (
@@ -156,20 +183,7 @@ const AssetsListPage: React.FC = () => {
               {paginatedAssets.map((asset) => (
                 <tr key={asset.id} className="hover:bg-gray-50 transition-colors duration-200">
                   <td className="px-8 py-4 whitespace-nowrap text-base font-medium text-gray-900">{asset.serialNumber}</td>
-                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">{
-                    (() => {
-                      // On suppose que la description est du type "Câble requested by hana"
-                      const match = asset.description.match(/^([A-Za-zÀ-ÿ]+) requested by (.+)$/i);
-                      if (match) {
-                        const typeFr = match[1];
-                        const who = match[2];
-                        const typeEn = descriptionLabels[typeFr] || typeFr;
-                        return `${typeEn} requested by ${who}`;
-                      }
-                      // fallback : ancienne logique
-                      return descriptionLabels[asset.description] || asset.description.replace(/^PC\s+/i, '');
-                    })()
-                  }</td>
+                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">{translateDescription(asset.description)}</td>
                   <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">{
                     (() => {
                       switch (asset.category) {
