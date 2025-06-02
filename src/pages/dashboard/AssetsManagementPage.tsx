@@ -107,29 +107,6 @@ const AssetsManagementPage: React.FC = () => {
         const response = await axiosInstance.get<InvestmentFormData[]>('/InvestmentForm');
         const forms = response.data;
         setFilteredForms(forms);
-        // 1. Préparer les données pour la courbe (groupement par date et status des items)
-        const statusList = ['Pending', 'Approved', 'Rejected', 'Under-approval'];
-        const grouped: Record<string, Record<string, number>> = {};
-        forms.forEach(form => {
-          const date = form.reqDate?.slice(0, 10);
-          if (!date) return;
-          if (!grouped[date]) grouped[date] = { Pending: 0, Approved: 0, Rejected: 0, 'Under-approval': 0 };
-          form.items.forEach(item => {
-            const s = item.status || 'Pending';
-            if (statusList.includes(s)) grouped[date][s]++;
-            else grouped[date]['Pending']++;
-          });
-        });
-        // Générer les données pour recharts
-        const allDates = Object.keys(grouped).sort();
-        const chartData = allDates.map(date => ({
-          date,
-          Pending: grouped[date].Pending,
-          Approved: grouped[date].Approved,
-          Rejected: grouped[date].Rejected,
-          'Under-approval': grouped[date]['Under-approval']
-        }));
-        setChartData(chartData);
         // 2. Calculer les totaux pour les cards (par items)
         const allItemsFlat = forms.flatMap(f => f.items || []);
         const pending = allItemsFlat.filter(item => item.status === 'Pending').length;
@@ -217,6 +194,32 @@ const AssetsManagementPage: React.FC = () => {
       rejected
     }));
   }, [allItems]);
+
+  useEffect(() => {
+    // 1. Préparer les données pour la courbe (groupement par date et status des items)
+    const statusList = ['Pending', 'Approved', 'Rejected', 'Under-approval'];
+    const grouped: Record<string, Record<string, number>> = {};
+    filteredForms.forEach(form => {
+      const date = form.reqDate?.slice(0, 10);
+      if (!date) return;
+      if (!grouped[date]) grouped[date] = { Pending: 0, Approved: 0, Rejected: 0, 'Under-approval': 0 };
+      form.items.forEach(item => {
+        const s = item.status || 'Pending';
+        if (statusList.includes(s)) grouped[date][s]++;
+        else grouped[date]['Pending']++;
+      });
+    });
+    // Générer les données pour recharts
+    const allDates = Object.keys(grouped).sort();
+    const chartData = allDates.map(date => ({
+      date,
+      Pending: grouped[date].Pending,
+      Approved: grouped[date].Approved,
+      Rejected: grouped[date].Rejected,
+      'Under-approval': grouped[date]['Under-approval']
+    }));
+    setChartData(chartData);
+  }, [filteredForms]);
 
   function exportTableToExcel(forms: InvestmentFormData[]) {
     const wsData: any[][] = [];
@@ -604,11 +607,11 @@ const AssetsManagementPage: React.FC = () => {
                   className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
                   onClick={() => setShowDeleteModal(false)}
                 >×</button>
-                <h3 className="text-xl font-bold mb-4">Confirmer la suppression</h3>
-                <p className="mb-4">Voulez-vous vraiment supprimer l'item <b>{deleteItem.description}</b> ?</p>
+                <h3 className="text-xl font-bold mb-4">Confirm deletion</h3>
+                <p className="mb-4">Do you really want to delete the item?<b>{deleteItem.description}</b> ?</p>
                 <div className="flex justify-end space-x-2 mt-4">
-                  <button type="button" className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowDeleteModal(false)}>Annuler</button>
-                  <button type="button" className="px-4 py-2 bg-red-600 text-white rounded" onClick={confirmDeleteItem}>Supprimer</button>
+                  <button type="button" className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                  <button type="button" className="px-4 py-2 bg-red-600 text-white rounded" onClick={confirmDeleteItem}>Delete</button>
                 </div>
               </div>
             </div>

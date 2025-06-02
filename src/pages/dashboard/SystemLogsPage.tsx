@@ -69,24 +69,32 @@ const SystemLogsPage = () => {
   }
 
   return (
-    <div className='container mx-auto p-6 bg-[#FFFFFF] min-h-screen'>
-      <h1 className='text-3xl font-bold text-[#000000] mb-6'>System Logs</h1>
-      <div className='bg-[#D3DCE6] p-4 rounded-lg shadow-md'>
-        <div className='grid grid-cols-6 gap-4 p-2 font-semibold text-[#000000] border-b-2 border-[#ED1C24]'>
-          <span>No</span>
-          <span>Date</span>
-          <span>Username</span>
-          <span className='col-span-3'>Description</span>
+    <div className='container mx-auto p-8 bg-gradient-to-br from-white via-gray-50 to-gray-100 min-h-screen'>
+      <div className='max-w-7xl mx-auto'>
+        <div className='flex items-center justify-between mb-8'>
+          <h1 className='text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent'>System Logs</h1>
+          <div className='text-sm text-gray-500'>Total Logs: {logs.length}</div>
         </div>
-        <div className='space-y-2 mt-4'>
-          {logs.filter(item => item.userName !== 'TEST').map((item, index) => (
-            <div key={index} className='grid grid-cols-6 gap-4 p-3 bg-[#FFFFFF] rounded-lg shadow-sm hover:bg-[#D3DCE6] transition-colors duration-200 border border-[#D3DCE6]'>
-              <span className='text-[#000000]'>{index + 1}</span>
-              <span className='text-[#000000]'>{moment(item.createdAt).fromNow()}</span>
-              <span className='text-[#000000]'>{item.userName}</span>
-              <span className='col-span-3 text-[#000000] break-words'>{translateEquipmentType(item.description)}</span>
-            </div>
-          ))}
+        <div className='bg-white p-8 rounded-2xl shadow-xl backdrop-blur-sm border border-gray-100'>
+          <div className='grid grid-cols-6 gap-6 p-4 font-semibold text-gray-700 border-b-2 border-red-500 bg-gray-50/50 rounded-t-lg'>
+            <span className='text-gray-600'>No</span>
+            <span className='text-gray-600'>Date</span>
+            <span className='text-gray-600'>Username</span>
+            <span className='col-span-3 text-gray-600'>Description</span>
+          </div>
+          <div className='space-y-4 mt-4'>
+            {logs.filter(item => item.userName !== 'TEST').map((item, index) => (
+              <div 
+                key={index} 
+                className='grid grid-cols-6 gap-6 p-5 bg-white rounded-xl shadow-sm hover:shadow-md hover:bg-red-50/30 transition-all duration-300 border border-gray-100 group'
+              >
+                <span className='text-gray-700 font-medium'>{index + 1}</span>
+                <span className='text-gray-700'>{moment(item.createdAt).fromNow()}</span>
+                <span className='text-gray-700 font-medium'>{item.userName}</span>
+                <span className='col-span-3 text-gray-700 break-words group-hover:text-gray-900'>{translateEquipmentType(item.description)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

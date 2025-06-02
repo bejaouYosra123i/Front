@@ -36,7 +36,7 @@ const TrackingModal = ({ item, onClose, onStatusUpdate }) => {
       // Validation : tous les champs requis doivent être remplis
       for (const key of requiredFields) {
         if (!fields[key]) {
-          setError('Veuillez remplir tous les champs requis avant d\'approuver.');
+          setError('Please fill in all required fields before approving.');
           return;
         }
       }
@@ -59,7 +59,7 @@ const TrackingModal = ({ item, onClose, onStatusUpdate }) => {
     if (fields.status === 'Approved') {
       for (const key of requiredFields) {
         if (!fields[key]) {
-          setError('Veuillez remplir tous les champs requis avant d\'approuver.');
+          setError('Please fill in all required fields before approving.');
           return;
         }
       }
@@ -75,7 +75,7 @@ const TrackingModal = ({ item, onClose, onStatusUpdate }) => {
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full relative">
         <button className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl" onClick={onClose}>×</button>
-        <h3 className="text-xl font-bold mb-4">Suivi de l'item #{item.id}</h3>
+        <h3 className="text-xl font-bold mb-4">Item tracking #{item.id}</h3>
         {showIyras && (
           <div>
             <label>YIRAS number</label>
@@ -133,7 +133,7 @@ const TrackingModal = ({ item, onClose, onStatusUpdate }) => {
           <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={() => handleStatus('Rejected')}>Rejected</button>
         </div>
         <div className="flex justify-end mt-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleSave}>Enregistrer</button>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleSave}>Save</button>
         </div>
       </div>
     </div>

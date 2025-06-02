@@ -123,7 +123,7 @@ const LoginPage = () => {
         <div className="mt-2 text-center w-full">
           <button
             type="button"
-            className="text-blue-600 hover:underline text-sm"
+            className="text-red-600 hover:underline text-sm"
             onClick={() => setShowForgot(f => !f)}
           >
             Forgot password?
@@ -136,11 +136,11 @@ const LoginPage = () => {
               placeholder="Enter your email or username"
               value={forgotEmail}
               onChange={e => setForgotEmail(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 w-full"
+              className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:border-red-500"
             />
             <button
               type="button"
-              className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium hover:bg-blue-700 transition"
+              className="bg-red-600 text-white rounded px-4 py-2 text-sm font-medium hover:bg-red-700 transition"
               onClick={handleForgotPassword}
               disabled={forgotLoading}
             >
