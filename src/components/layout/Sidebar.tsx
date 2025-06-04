@@ -119,7 +119,7 @@ const Sidebar = () => {
 
   // Liste des labels autorisés pour les managers
   const managerAllowedLabels = [
-    'Dashboard',
+
     'New Request',
     'Requests Validation',
     'Profile',
@@ -132,7 +132,7 @@ const Sidebar = () => {
     {
       group: 'main',
       items: [
-        { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly: false },
+        { icon: <FiHome />, label: 'Dashboard', to: PATH_DASHBOARD.dashboard, adminOnly:true },
         { icon: <FiLayers />, label: 'Investment Management', to: PATH_DASHBOARD.assetsManagement, adminOnly: true },
         { icon: <FiFileText />, label: 'Investment Forms', to: PATH_DASHBOARD.investmentForms, adminOnly: true },
         { icon: <FiPlusCircle />, label: 'New Request', to: PATH_DASHBOARD.addRequest, adminOnly: false },

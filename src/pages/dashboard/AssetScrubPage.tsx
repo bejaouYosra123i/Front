@@ -210,13 +210,13 @@ const AssetScrubPage = () => {
           className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600"
           onClick={() => setShowAdd(true)}
         >
-          + Ajouter un actif
+          + Add an asset
         </button>
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2"
           onClick={handleExportPDF}
         >
-          <span role="img" aria-label="export">📄</span> Exporter en PDF
+          <span role="img" aria-label="export">📄</span> Export to PDF
         </button>
       </div>
       {loading ? (
@@ -288,7 +288,7 @@ const AssetScrubPage = () => {
               className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl"
               onClick={() => setShowAdd(false)}
             >×</button>
-            <h3 className="text-xl font-bold mb-4">Ajouter un actif</h3>
+            <h3 className="text-xl font-bold mb-4">Add an actif </h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <input className="border p-2 rounded" placeholder="Company Code" value={newAsset.companyCode} onChange={e => setNewAsset(a => ({ ...a, companyCode: e.target.value }))} />
               <input className="border p-2 rounded" placeholder="Plant Code" value={newAsset.plantCode} onChange={e => setNewAsset(a => ({ ...a, plantCode: e.target.value }))} />
@@ -309,8 +309,8 @@ const AssetScrubPage = () => {
               <input className="border p-2 rounded" type="date" placeholder="Data Input Date" value={newAsset.dataInputDate?.slice(0,10) || ''} onChange={e => setNewAsset(a => ({ ...a, dataInputDate: e.target.value }))} />
             </div>
             <div className="flex justify-end gap-2">
-              <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setShowAdd(false)}>Annuler</button>
-              <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={handleAdd}>Ajouter</button>
+              <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setShowAdd(false)}>Cancel</button>
+              <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={handleAdd}>Add</button>
             </div>
           </div>
         </div>

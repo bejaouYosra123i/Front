@@ -43,7 +43,7 @@ const DashboardPage: React.FC = () => {
   const isAdmin = user?.roles?.includes('ADMIN');
   const isSimpleUser = !isAdmin && !isManager;
 
-  if (isSimpleUser) {
+  if (!isAdmin) {
     return <Navigate to={PATH_DASHBOARD.addRequest} />;
   }
 
